@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Identifiers and Primitives
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function getUserRole() {
+      let path = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(path) ? get(path).data.role : 'student';
+    }
+    function isAdmin() { 
+      return isSignedIn() && (getUserRole() == 'admin' || request.auth.token.email == 'betojp24@gmail.com'); 
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && (isOwner(userId) || isAdmin()) && 
+                    (!incoming().keys().hasAny(['role']) || isAdmin() || incoming().role == existing().role);
+    }
+
+    // Products Collection (Zona Kids toys/books)
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Orders Collection
+    match /orders/{orderId} {
+      // Anyone can create an order, but logs of orders are protected
+      allow read, list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if true; // Allows guests and users to check out
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Configuration Collection
+    match /config/{configId} {
+      allow read: if true; // Needs to be readable for key retrieves
+      allow write, update: if isAdmin();
+    }
+    
+    // Legacy Courses / Enrollments / Submissions compatibility so compilation doesn't fail if we have existing docs
+    match /courses/{courseId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /enrollments/{enrollmentId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow write: if isSignedIn();
+    }
+    match /questions/{questionId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    match /submissions/{submissionId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+  }
+}

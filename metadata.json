@@ -1,0 +1,8 @@
+{
+  "name": "Nexts.Online",
+  "description": "Plataforma e-learning de cursos de formación profesional rápida con salida laboral directa en Administración, Salud, Educación y Tecnología.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

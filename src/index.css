@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-primary: #009ee3; /* Mercado Pago bright blue */
+  --color-accent: #009ee3;
+  --color-accent-hover: #008bd0;
+  --color-app-bg: #040814; /* Deep dark navy */
+  --color-card-bg: rgba(10, 17, 40, 0.75); /* Deep dark blue card */
+  --color-text-main: #f9fafb;
+  --color-text-muted: #9ca3af;
+  --color-app-border: rgba(0, 158, 227, 0.15); /* Sky blue border */
+  --color-success: #10b981;
+}
+
+html, body {
+  font-family: var(--font-sans);
+  background-color: var(--color-app-bg);
+  color: var(--color-text-main);
+  overflow-x: hidden;
+  width: 100%;
+}

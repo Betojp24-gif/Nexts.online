@@ -1,0 +1,92 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Children books and toys products",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "category": { "type": "string" },
+        "brand": { "type": "string" },
+        "ageRange": { "type": "string" },
+        "image": { "type": "string" },
+        "stock": { "type": "number" },
+        "popular": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "description", "price", "category", "stock"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer purchase orders",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "dni": { "type": "string" },
+        "address": { "type": "string" },
+        "city": { "type": "string" },
+        "province": { "type": "string" },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "shippingCost": { "type": "number" },
+        "total": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "processing", "completed", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "paymentDetails": { "type": "object" }
+      },
+      "required": ["customerName", "customerEmail", "address", "items", "total", "status"]
+    },
+    "PaymentConfig": {
+      "title": "PaymentConfig",
+      "description": "Global e-commerce payment configuration",
+      "type": "object",
+      "properties": {
+        "mercadopagoActive": { "type": "boolean" },
+        "mercadopagoPublicKey": { "type": "string" },
+        "mercadopagoAccessToken": { "type": "string" },
+        "mercadopagoSandbox": { "type": "boolean" },
+        "stripeActive": { "type": "boolean" },
+        "stripePublicKey": { "type": "string" },
+        "stripeSecretKey": { "type": "string" },
+        "paypalActive": { "type": "boolean" },
+        "paypalClientId": { "type": "string" },
+        "transferenciaActive": { "type": "boolean" },
+        "transferenciaBank": { "type": "string" },
+        "transferenciaCbu": { "type": "string" },
+        "transferenciaAlias": { "type": "string" },
+        "transferenciaHolder": { "type": "string" },
+        "transferenciaCuit": { "type": "string" },
+        "currency": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "updatedBy": { "type": "string" }
+      },
+      "required": ["currency"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile with personal information",
+      "type": "object",
+      "properties": {
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "student"] },
+        "phone": { "type": "string" },
+        "profileImage": { "type": "string" }
+      },
+      "required": ["firstName", "lastName", "email", "role"]
+    }
+  },
+  "firestore": {
+    "products/{productId}": { "schema": "Product", "description": "Toys and books catalog" },
+    "orders/{orderId}": { "schema": "Order", "description": "Client orders" },
+    "config/{configId}": { "schema": "PaymentConfig", "description": "Payment modules setup" },
+    "users/{userId}": { "schema": "User", "description": "User profiles" }
+  }
+}
