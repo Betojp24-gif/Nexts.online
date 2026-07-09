@@ -12,12 +12,12 @@ service cloud.firestore {
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
 
-    function getUserRole() {
-      let path = /databases/$(database)/documents/users/$(request.auth.uid);
-      return exists(path) ? get(path).data.role : 'student';
-    }
     function isAdmin() { 
-      return isSignedIn() && (getUserRole() == 'admin' || request.auth.token.email == 'betojp24@gmail.com'); 
+      return isSignedIn() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') || 
+        request.auth.token.email == 'betojp24@gmail.com'
+      ); 
     }
 
     // Users Collection
@@ -31,13 +31,15 @@ service cloud.firestore {
     // Products Collection (Zona Kids toys/books)
     match /products/{productId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || incoming().diff(existing()).affectedKeys().hasOnly(['stock']);
     }
 
     // Orders Collection
     match /orders/{orderId} {
-      // Anyone can create an order, but logs of orders are protected
-      allow read, list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      // Anyone can read a single order if they have the exact ID (e.g. for guest/user success page)
+      allow get: if true;
+      allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow create: if true; // Allows guests and users to check out
       allow update: if isAdmin();
       allow delete: if isAdmin();

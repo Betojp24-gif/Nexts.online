@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { doc, getDoc, collection, addDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
@@ -139,7 +139,13 @@ export default function Checkout() {
       };
 
       // Add to Firestore collection 'orders'
-      const docRef = await addDoc(collection(db, 'orders'), orderPayload);
+      let docRef;
+      try {
+        docRef = await addDoc(collection(db, 'orders'), orderPayload);
+      } catch (addErr) {
+        handleFirestoreError(addErr, OperationType.CREATE, 'orders');
+        return; // Unreachable as handleFirestoreError throws
+      }
 
       // Deduct stock for products
       for (const item of cart) {
@@ -149,8 +155,14 @@ export default function Checkout() {
           await updateDoc(productRef, {
             stock: increment(-item.quantity)
           });
-        } catch (stockErr) {
+        } catch (stockErr: any) {
           console.warn(`Could not update stock for ${item.product.id}:`, stockErr);
+          if (stockErr?.code === 'permission-denied') {
+            // Log structured error but do not throw to allow checkout to succeed
+            try {
+              handleFirestoreError(stockErr, OperationType.UPDATE, `products/${item.product.id}`);
+            } catch (_) {}
+          }
         }
       }
 
@@ -167,13 +179,8 @@ export default function Checkout() {
       // Clear Shopping Cart and redirect
       clearCart();
       
-      // Open WhatsApp to request quota and navigate to success receipt
-      try {
-        window.open(whatsappUrl, '_blank');
-      } catch (err) {
-        console.warn('Popup blocked, will redirect on success page');
-      }
-      navigate(`/payment-success?orderId=${docRef.id}`);
+      // Navigate to success receipt with auto-redirect flag to bypass popup blockers
+      navigate(`/payment-success?orderId=${docRef.id}&autoredirect=true`);
 
     } catch (err) {
       console.error('Error saving order receipt:', err);

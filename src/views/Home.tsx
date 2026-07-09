@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Product } from '../types';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { INITIAL_PRODUCTS, getProductImage } from '../data/initialProducts';
 import { 
@@ -36,7 +36,13 @@ export default function Home() {
       try {
         setLoading(true);
         const colRef = collection(db, 'products');
-        const snap = await getDocs(colRef);
+        let snap;
+        try {
+          snap = await getDocs(colRef);
+        } catch (getErr) {
+          handleFirestoreError(getErr, OperationType.LIST, 'products');
+          return; // Unreachable because handleFirestoreError throws
+        }
         
         let shouldSeed = snap.empty;
         const list: Product[] = [];

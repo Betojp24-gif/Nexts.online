@@ -4,7 +4,7 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth as firebaseAuth } from '../lib/firebase';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Phone, Lock, Save, Shield, Camera, AlertCircle, X, RefreshCw } from 'lucide-react';
+import { User, Phone, Lock, Save, Shield, Camera, AlertCircle, X, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import CameraCapture from '../components/CameraCapture';
 
@@ -20,6 +20,9 @@ export default function Profile() {
     profileImage: ''
   });
   const [showPasswordFields, setShowPasswordFields] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -255,34 +258,61 @@ export default function Profile() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-text-muted uppercase tracking-widest">Contraseña Actual</label>
-                      <input 
-                        type="password"
-                        required
-                        value={passwordData.currentPassword}
-                        onChange={e => setPasswordData({...passwordData, currentPassword: e.target.value})}
-                        className="w-full h-12 px-4 bg-slate-50 border border-app-border rounded-xl focus:ring-2 focus:ring-accent/20 outline-none transition-all text-slate-900"
-                      />
+                      <div className="relative">
+                        <input 
+                          type={showCurrentPassword ? "text" : "password"}
+                          required
+                          value={passwordData.currentPassword}
+                          onChange={e => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                          className="w-full h-12 pl-4 pr-12 bg-slate-50 border border-app-border rounded-xl focus:ring-2 focus:ring-accent/20 outline-none transition-all text-slate-900"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                        >
+                          {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-xs font-bold text-text-muted uppercase tracking-widest">Nueva Contraseña</label>
-                        <input 
-                          type="password"
-                          required
-                          value={passwordData.newPassword}
-                          onChange={e => setPasswordData({...passwordData, newPassword: e.target.value})}
-                          className="w-full h-12 px-4 bg-slate-50 border border-app-border rounded-xl focus:ring-2 focus:ring-accent/20 outline-none transition-all text-slate-900"
-                        />
+                        <div className="relative">
+                          <input 
+                            type={showNewPassword ? "text" : "password"}
+                            required
+                            value={passwordData.newPassword}
+                            onChange={e => setPasswordData({...passwordData, newPassword: e.target.value})}
+                            className="w-full h-12 pl-4 pr-12 bg-slate-50 border border-app-border rounded-xl focus:ring-2 focus:ring-accent/20 outline-none transition-all text-slate-900"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                          >
+                            {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-bold text-text-muted uppercase tracking-widest">Confirmar Nueva Contraseña</label>
-                        <input 
-                          type="password"
-                          required
-                          value={passwordData.confirmPassword}
-                          onChange={e => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                          className="w-full h-12 px-4 bg-slate-50 border border-app-border rounded-xl focus:ring-2 focus:ring-accent/20 outline-none transition-all text-slate-900"
-                        />
+                        <div className="relative">
+                          <input 
+                            type={showConfirmPassword ? "text" : "password"}
+                            required
+                            value={passwordData.confirmPassword}
+                            onChange={e => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                            className="w-full h-12 pl-4 pr-12 bg-slate-50 border border-app-border rounded-xl focus:ring-2 focus:ring-accent/20 outline-none transition-all text-slate-900"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                          >
+                            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

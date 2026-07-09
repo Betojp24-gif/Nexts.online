@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { CheckCircle, Truck, Calendar, ShoppingBag, MapPin, Tag, Download } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -10,6 +10,8 @@ export default function PaymentSuccess() {
   const orderId = searchParams.get('orderId');
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const autoredirect = searchParams.get('autoredirect') === 'true';
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchOrderReceipt() {
@@ -20,7 +22,13 @@ export default function PaymentSuccess() {
       try {
         setLoading(true);
         const docRef = doc(db, 'orders', orderId);
-        const docSnap = await getDoc(docRef);
+        let docSnap;
+        try {
+          docSnap = await getDoc(docRef);
+        } catch (getErr) {
+          handleFirestoreError(getErr, OperationType.GET, `orders/${orderId}`);
+          return;
+        }
         if (docSnap.exists()) {
           setOrder(docSnap.data());
         }
@@ -33,15 +41,6 @@ export default function PaymentSuccess() {
     fetchOrderReceipt();
   }, [orderId]);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mb-4" />
-        <p className="text-slate-500 font-bold">Consolidando ticket de compra...</p>
-      </div>
-    );
-  }
-
   // Generate WhatsApp message for agreement
   const getWhatsappUrl = () => {
     if (!order) return '';
@@ -50,6 +49,36 @@ export default function PaymentSuccess() {
     const message = `Hola! Registré mi pre-inscripción con el código #${orderId || 'NX-NUEVA'}. Mi nombre es ${order.customerName || ''}, DNI ${order.dni || ''}, email ${order.customerEmail || ''}. Deseo coordinar el pago de los siguientes trayectos: ${itemsText}. Total estimado: $${totalText}.`;
     return `https://wa.me/5491166134186?text=${encodeURIComponent(message)}`;
   };
+
+  useEffect(() => {
+    if (!loading && order && order.paymentMethod === 'whatsapp' && autoredirect) {
+      setRedirectCountdown(3); // 3 seconds countdown
+    }
+  }, [loading, order, autoredirect]);
+
+  useEffect(() => {
+    if (redirectCountdown === null) return;
+    if (redirectCountdown === 0) {
+      const url = getWhatsappUrl();
+      if (url) {
+        window.location.href = url;
+      }
+      return;
+    }
+    const timer = setTimeout(() => {
+      setRedirectCountdown(prev => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [redirectCountdown]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[500px] text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mb-4" />
+        <p className="text-slate-500 font-bold">Consolidando ticket de compra...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#fcfbf9] py-12 px-4 sm:px-6 md:px-10 text-left">
@@ -172,6 +201,21 @@ export default function PaymentSuccess() {
                   <span className="text-lg">💬</span>
                   <span className="font-black text-emerald-800 uppercase tracking-wide">Acuerdo de Pago por WhatsApp</span>
                 </div>
+                
+                {redirectCountdown !== null && (
+                  <div className="bg-emerald-500 text-white p-3 rounded-xl font-bold text-center text-xs animate-pulse flex items-center justify-between gap-2 shadow-sm">
+                    <span>📱 Redirigiendo automáticamente en {redirectCountdown} segundos...</span>
+                    <button 
+                      type="button" 
+                      onClick={() => setRedirectCountdown(null)} 
+                      className="bg-emerald-700 hover:bg-emerald-800 px-2 py-0.5 rounded text-[9px] uppercase font-bold transition-colors"
+                      title="Cancelar redirección automática"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )}
+
                 <p className="text-emerald-800 leading-relaxed font-semibold">
                   Tu pre-inscripción ha sido registrada exitosamente. Para acordar el precio y método de pago con uno de nuestros asesores, por favor haz clic en el botón de abajo para iniciar la conversación en WhatsApp con todos tus datos precargados.
                 </p>

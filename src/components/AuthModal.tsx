@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
-import { X, Mail, Lock, User, Phone, IdCard, Camera, LogIn, UserPlus, Chrome, RefreshCw } from 'lucide-react';
+import { X, Mail, Lock, User, Phone, IdCard, Camera, LogIn, UserPlus, Chrome, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import CameraCapture from './CameraCapture';
 import { toast } from 'sonner';
 
@@ -15,6 +15,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [showCamera, setShowCamera] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -25,6 +26,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     phone: '',
     profileImage: ''
   });
+
+  const hasMinLength = formData.password.length >= 6;
+  const hasNumber = /\d/.test(formData.password);
+  const hasLetter = /[a-zA-Z]/.test(formData.password);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -44,6 +49,17 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         await signInWithEmail(formData.email, formData.password);
         toast.success('¡Bienvenido de nuevo!');
       } else {
+        // Validar requisitos de la contraseña antes de registrarse
+        if (!hasMinLength) {
+          toast.error('La contraseña debe tener al menos 6 caracteres.');
+          setLoading(false);
+          return;
+        }
+        if (!hasLetter || !hasNumber) {
+          toast.error('La contraseña debe incluir al menos una letra y un número.');
+          setLoading(false);
+          return;
+        }
         const { email, password, ...profileData } = formData;
         await signUpWithEmail(email, password, profileData);
         toast.success('Cuenta creada con éxito. ¡Bienvenido a Nexts.Online!');
@@ -240,14 +256,43 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
                   <input
                     required
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Contraseña"
-                    className="w-full h-11 pl-10 pr-4 bg-slate-950/50 border border-slate-800 rounded-xl focus:ring-2 focus:ring-[#009ee3] focus:bg-slate-950 focus:border-transparent transition-all text-xs font-semibold text-white placeholder-slate-500"
+                    className="w-full h-11 pl-10 pr-10 bg-slate-950/50 border border-slate-800 rounded-xl focus:ring-2 focus:ring-[#009ee3] focus:bg-slate-950 focus:border-transparent transition-all text-xs font-semibold text-white placeholder-slate-500"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors focus:outline-none"
+                    title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
+
+                {/* Password real-time requirements visualizer when registering */}
+                {!isLogin && formData.password.length > 0 && (
+                  <div className="mt-2 p-2.5 bg-slate-950/40 border border-slate-800/80 rounded-xl space-y-2">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Requisitos de seguridad:</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+                      <div className={`flex items-center gap-1.5 text-[9px] font-bold transition-all ${hasMinLength ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full transition-all ${hasMinLength ? 'bg-emerald-400 shadow-sm shadow-emerald-500/50' : 'bg-rose-500'}`}></span>
+                        <span>Mín. 6 carac.</span>
+                      </div>
+                      <div className={`flex items-center gap-1.5 text-[9px] font-bold transition-all ${hasNumber ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full transition-all ${hasNumber ? 'bg-emerald-400 shadow-sm shadow-emerald-500/50' : 'bg-rose-500'}`}></span>
+                        <span>Un número</span>
+                      </div>
+                      <div className={`flex items-center gap-1.5 text-[9px] font-bold transition-all ${hasLetter ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full transition-all ${hasLetter ? 'bg-emerald-400 shadow-sm shadow-emerald-500/50' : 'bg-rose-500'}`}></span>
+                        <span>Una letra</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button

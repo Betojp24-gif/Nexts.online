@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'motion/react';
@@ -111,7 +111,13 @@ export default function MyOrders() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const snap = await getDocs(collection(db, 'products'));
+        let snap;
+        try {
+          snap = await getDocs(collection(db, 'products'));
+        } catch (getErr) {
+          handleFirestoreError(getErr, OperationType.LIST, 'products');
+          return;
+        }
         const pMap: Record<string, any> = {};
         snap.forEach(docSnap => {
           pMap[docSnap.id] = docSnap.data();
@@ -137,7 +143,13 @@ export default function MyOrders() {
           colRef, 
           where('userId', '==', user.uid)
         );
-        const snap = await getDocs(qRef);
+        let snap;
+        try {
+          snap = await getDocs(qRef);
+        } catch (getErr) {
+          handleFirestoreError(getErr, OperationType.LIST, 'orders');
+          return;
+        }
         const list: any[] = [];
         snap.forEach((docSnap) => {
           list.push({ id: docSnap.id, ...docSnap.data() });
