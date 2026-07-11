@@ -320,7 +320,16 @@ export default function Home() {
                         </div>
 
                         {/* Product Image */}
-                        <div className="relative h-48 w-full overflow-hidden border-b border-slate-850">
+                        <div 
+                          onClick={() => {
+                            if (!outOfStock) {
+                              addToCart(p, 1);
+                              navigate('/checkout');
+                            }
+                          }}
+                          className={`relative h-48 w-full overflow-hidden border-b border-slate-850 ${outOfStock ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                          title={outOfStock ? p.name : `Matricularse en ${p.name}`}
+                        >
                           <img
                              src={p.image}
                              alt={p.name}

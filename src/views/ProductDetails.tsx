@@ -9,7 +9,7 @@ import { INITIAL_PRODUCTS, getProductImage } from '../data/initialProducts';
 import { COURSES } from '../constants';
 import { 
   ArrowLeft, ShoppingBag, BookOpen, Clock, Award, ShieldCheck, 
-  ChevronRight, HelpCircle, ChevronDown, ChevronUp, Download, CheckCircle,
+  ChevronRight, HelpCircle, ChevronDown, ChevronUp, CheckCircle,
   Calculator, Heart, Users, GraduationCap, Cpu, Briefcase
 } from 'lucide-react';
 
@@ -387,18 +387,7 @@ export default function ProductDetails() {
                   </div>
                 )}
 
-                {courseData?.programUrl && (
-                  <div className="pt-4 text-center">
-                    <a
-                      href={courseData.programUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-850 text-slate-200 px-6 py-3 rounded-full text-xs font-black uppercase tracking-wider transition-all border border-slate-800"
-                    >
-                      <Download size={14} /> Descargar Programa Oficial en PDF
-                    </a>
-                  </div>
-                )}
+
               </div>
             )}
 
