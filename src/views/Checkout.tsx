@@ -83,11 +83,11 @@ export default function Checkout() {
 
   // Redirect if cart is empty
   useEffect(() => {
-    if (cart.length === 0) {
+    if (cart.length === 0 && !processing) {
       toast.error('Tu lista de inscripciones está vacía, selecciona un curso antes de continuar.');
       navigate('/');
     }
-  }, [cart, navigate]);
+  }, [cart, processing, navigate]);
 
   // Shipping cost calculations
   const shippingCost = 0;

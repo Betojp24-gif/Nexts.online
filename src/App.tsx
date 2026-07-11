@@ -108,11 +108,7 @@ function AppRoutes() {
             } />
             
             {/* Order Confirmation Receipts */}
-            <Route path="/payment-success" element={
-              <ProtectedRoute>
-                <PaymentSuccess />
-              </ProtectedRoute>
-            } />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
             
             {/* Admin configurations and telemetry catalog controls */}
             <Route path="/admin" element={
