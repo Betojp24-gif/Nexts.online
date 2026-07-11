@@ -7,13 +7,64 @@ import {
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
-const app = initializeApp(firebaseConfig);
+// Detect if we are running in the production environment (Vercel or custom domain)
+const isProductionDomain = typeof window !== 'undefined' && (
+  window.location.hostname.includes('nexts.online') || 
+  window.location.hostname.includes('vercel.app')
+);
+
+// Check for optional Vite environment variables
+const envConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID,
+};
+
+const hasEnvConfig = !!(envConfig.apiKey && envConfig.projectId);
+
+// Production Firebase Configuration supplied by the user
+const userProdConfig = {
+  apiKey: "AIzaSyBHC2YH6RjvP37koaw6MAAz9sANjrN52Xg",
+  authDomain: "nexts-online-prod.firebaseapp.com",
+  projectId: "nexts-online-prod",
+  storageBucket: "nexts-online-prod.firebasestorage.app",
+  messagingSenderId: "110676729683",
+  appId: "1:110676729683:web:eb323d70d5d744ee860ba6",
+  firestoreDatabaseId: undefined, // Standard Firebase projects use the (default) database
+};
+
+// Select the correct configuration
+let activeConfig: any;
+if (hasEnvConfig) {
+  activeConfig = {
+    apiKey: envConfig.apiKey,
+    authDomain: envConfig.authDomain,
+    projectId: envConfig.projectId,
+    storageBucket: envConfig.storageBucket,
+    messagingSenderId: envConfig.messagingSenderId,
+    appId: envConfig.appId,
+    firestoreDatabaseId: envConfig.firestoreDatabaseId || undefined,
+  };
+} else if (isProductionDomain) {
+  activeConfig = userProdConfig;
+} else {
+  activeConfig = {
+    ...firebaseConfig,
+    firestoreDatabaseId: firebaseConfig.firestoreDatabaseId || undefined,
+  };
+}
+
+const app = initializeApp(activeConfig);
 
 // Using initializeFirestore with experimentalForceLongPolling can help 
 // in environments where WebSockets are unstable or blocked.
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
-}, firebaseConfig.firestoreDatabaseId);
+}, activeConfig.firestoreDatabaseId);
 
 export const auth = getAuth(app);
 
