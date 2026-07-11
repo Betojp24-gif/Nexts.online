@@ -140,7 +140,7 @@ export default function PaymentSuccess() {
             <div className="w-16 h-16 bg-[#25D366] text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-400/20">
               <CheckCircle size={32} />
             </div>
-            <h1 className="text-2xl md:text-3xl font-black text-slate-900">¡Inscripción Confirmada!</h1>
+            <h1 className="text-2xl md:text-3xl font-black text-slate-900">¡Cupo Solicitado!</h1>
             <p className="text-slate-500 text-xs md:text-sm mt-1.5 font-medium leading-relaxed">
               Muchas gracias por elegir Nexts.Online. Prontamente recibirás un e-mail con las credenciales de acceso al Campus Virtual y tu comprobante oficial de alumno regular.
             </p>
@@ -221,7 +221,7 @@ export default function PaymentSuccess() {
                   </span>
                 </div>
                 <div className="pt-3 border-t border-dashed border-gray-100 flex justify-between text-slate-900">
-                  <span className="font-black text-sm uppercase">Total Abonado</span>
+                  <span className="font-black text-sm uppercase">Total a Abonar</span>
                   <span className="text-xl font-black text-[#009ee3]">${(order?.total || 0).toLocaleString('es-AR')}</span>
                 </div>
               </div>
