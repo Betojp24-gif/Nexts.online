@@ -80,14 +80,15 @@ export default function Checkout() {
   const [transferId, setTransferId] = useState('');
 
   const [processing, setProcessing] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   // Redirect if cart is empty
   useEffect(() => {
-    if (cart.length === 0 && !processing) {
+    if (cart.length === 0 && !processing && !isSubmitted) {
       toast.error('Tu lista de inscripciones está vacía, selecciona un curso antes de continuar.');
       navigate('/');
     }
-  }, [cart, processing, navigate]);
+  }, [cart, processing, isSubmitted, navigate]);
 
   // Shipping cost calculations
   const shippingCost = 0;
@@ -193,6 +194,7 @@ export default function Checkout() {
       });
 
       // Clear Shopping Cart and redirect
+      setIsSubmitted(true);
       clearCart();
       
       // Navigate to success receipt with auto-redirect flag to bypass popup blockers
@@ -214,33 +216,33 @@ export default function Checkout() {
   ];
 
   return (
-    <div className="bg-slate-950 min-h-screen py-8 px-4 sm:px-6 md:px-10 text-left text-slate-100">
+    <div className="bg-slate-950 min-h-screen py-5 px-4 sm:px-6 md:px-10 text-left text-slate-100">
       <div className="max-w-7xl mx-auto">
         
         {/* Title */}
-        <div className="mb-8 select-none">
-          <h1 className="text-2xl md:text-3xl font-black text-white">Completá tu Inscripción</h1>
-          <p className="text-xs sm:text-sm text-slate-400 font-medium">Estás en el paso final de tu inscripción en los trayectos formativos de Nexts.Online.</p>
+        <div className="mb-4 select-none">
+          <h1 className="text-xl md:text-2xl font-black text-white">Completá tu Inscripción</h1>
+          <p className="text-[11px] text-slate-400 font-medium">Estás en el paso final de tu inscripción en Nexts.Online.</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-start">
           
           {/* Columns 1-3: Checkout details inputs form */}
-          <form onSubmit={handleFormSubmit} className="lg:col-span-3 space-y-6">
+          <form onSubmit={handleFormSubmit} className="lg:col-span-3 space-y-4">
             
             {/* Step 1: Datos Personales */}
-            <div className="bg-slate-900/60 backdrop-blur-md p-5 rounded-2xl border border-slate-800/80 shadow-sm space-y-3">
+            <div className="bg-slate-900/60 backdrop-blur-md p-4 rounded-xl border border-slate-800/80 shadow-sm space-y-2.5">
               <div className="flex justify-between items-center select-none">
-                <h3 className="text-sm font-black text-white flex items-center gap-2">
-                  <span className="bg-[#009ee3] text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold">1</span>
+                <h3 className="text-xs font-black text-white flex items-center gap-1.5">
+                  <span className="bg-[#009ee3] text-white w-4.5 h-4.5 rounded-full flex items-center justify-center text-[9px] font-bold">1</span>
                   Datos del Cursante
                 </h3>
-                <span className="text-[10px] text-emerald-400 font-extrabold bg-emerald-400/10 px-2 py-0.5 rounded-full">⚡ SIN REGISTRO</span>
+                <span className="text-[8px] text-emerald-400 font-extrabold bg-emerald-400/10 px-1.5 py-0.5 rounded-full uppercase tracking-wider">⚡ SIN REGISTRO REQUERIDO</span>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Nombre Completo *</label>
+                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Nombre Completo *</label>
                   <input
                     type="text"
                     name="name"
@@ -248,12 +250,12 @@ export default function Checkout() {
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="Ej. Juan Pérez"
-                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-xl px-3.5 py-2.5 text-xs font-medium text-white"
+                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-lg px-3 py-2 text-xs font-medium text-white placeholder-slate-600"
                     id="checkout-name-input"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">DNI (Identificación) *</label>
+                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">DNI (Identificación) *</label>
                   <input
                     type="text"
                     name="dni"
@@ -261,15 +263,15 @@ export default function Checkout() {
                     value={formData.dni}
                     onChange={handleInputChange}
                     placeholder="Ej. 34123456"
-                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-xl px-3.5 py-2.5 text-xs font-medium text-white"
+                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-lg px-3 py-2 text-xs font-medium text-white placeholder-slate-600"
                     id="checkout-dni-input"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">E-mail *</label>
+                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">E-mail *</label>
                   <input
                     type="email"
                     name="email"
@@ -277,12 +279,12 @@ export default function Checkout() {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="ejemplo@correo.com"
-                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-xl px-3.5 py-2.5 text-xs font-medium text-white"
+                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-lg px-3 py-2 text-xs font-medium text-white placeholder-slate-600"
                     id="checkout-email-input"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Teléfono Móvil *</label>
+                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Teléfono Móvil *</label>
                   <input
                     type="tel"
                     name="phone"
@@ -290,7 +292,7 @@ export default function Checkout() {
                     value={formData.phone}
                     onChange={handleInputChange}
                     placeholder="Ej. 1198765432"
-                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-xl px-3.5 py-2.5 text-xs font-medium text-white"
+                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-lg px-3 py-2 text-xs font-medium text-white placeholder-slate-600"
                     id="checkout-phone-input"
                   />
                 </div>
@@ -298,108 +300,103 @@ export default function Checkout() {
             </div>
 
             {/* Step 2: Forma de Cursada */}
-            <div className="bg-slate-900/60 backdrop-blur-md p-5 rounded-2xl border border-slate-800/80 shadow-sm space-y-3">
-              <h3 className="text-sm font-black text-white flex items-center gap-2 select-none">
-                <span className="bg-[#009ee3] text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold">2</span>
+            <div className="bg-slate-900/60 backdrop-blur-md p-4 rounded-xl border border-slate-800/80 shadow-sm space-y-2.5">
+              <h3 className="text-xs font-black text-white flex items-center gap-1.5 select-none">
+                <span className="bg-[#009ee3] text-white w-4.5 h-4.5 rounded-full flex items-center justify-center text-[9px] font-bold">2</span>
                 Forma de Cursada
               </h3>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div 
                   onClick={() => setShippingMethod('digital')}
-                  className={`p-3 rounded-xl border cursor-pointer select-none transition-all text-left ${shippingMethod === 'digital' ? 'bg-[#009ee3]/10 border-[#009ee3] text-white' : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 text-slate-300'}`}
+                  className={`p-2.5 rounded-xl border cursor-pointer select-none transition-all text-left ${shippingMethod === 'digital' ? 'bg-[#009ee3]/10 border-[#009ee3] text-white' : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 text-slate-300'}`}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3.5 rounded-full border border-slate-600 flex items-center justify-center shrink-0">
-                        {shippingMethod === 'digital' && <span className="w-2 h-2 bg-[#009ee3] rounded-full" />}
+                  <div className="flex items-center justify-between gap-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-full border border-slate-600 flex items-center justify-center shrink-0">
+                        {shippingMethod === 'digital' && <span className="w-1.5 h-1.5 bg-[#009ee3] rounded-full" />}
                       </span>
-                      <span className="text-xs font-black uppercase tracking-wider">Online Asincrónico</span>
+                      <span className="text-[11px] font-black uppercase tracking-wider">Online Asincrónico</span>
                     </div>
-                    <span className="text-[9px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded font-bold uppercase shrink-0">RECOMENDADO</span>
+                    <span className="text-[8px] bg-emerald-500/15 text-emerald-400 px-1 py-0.5 rounded font-bold uppercase shrink-0">RECOMENDADO</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1 pl-5.5 font-medium leading-relaxed">Estudia a tu ritmo con acceso permanente a clases grabadas y materiales.</p>
                 </div>
 
                 <div 
                   onClick={() => setShippingMethod('sincrono')}
-                  className={`p-3 rounded-xl border cursor-pointer select-none transition-all text-left ${shippingMethod === 'sincrono' ? 'bg-[#009ee3]/10 border-[#009ee3] text-white' : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 text-slate-300'}`}
+                  className={`p-2.5 rounded-xl border cursor-pointer select-none transition-all text-left ${shippingMethod === 'sincrono' ? 'bg-[#009ee3]/10 border-[#009ee3] text-white' : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 text-slate-300'}`}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="w-3.5 h-3.5 rounded-full border border-slate-600 flex items-center justify-center shrink-0">
-                        {shippingMethod === 'sincrono' && <span className="w-2 h-2 bg-[#009ee3] rounded-full" />}
+                  <div className="flex items-center justify-between gap-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-full border border-slate-600 flex items-center justify-center shrink-0">
+                        {shippingMethod === 'sincrono' && <span className="w-1.5 h-1.5 bg-[#009ee3] rounded-full" />}
                       </span>
-                      <span className="text-xs font-black uppercase tracking-wider">Sincrónico con Apoyo</span>
+                      <span className="text-[11px] font-black uppercase tracking-wider">Sincrónico con Apoyo</span>
                     </div>
-                    <span className="text-[9px] bg-sky-500/15 text-sky-400 px-1.5 py-0.5 rounded font-bold uppercase shrink-0">CLASES</span>
+                    <span className="text-[8px] bg-sky-500/15 text-sky-400 px-1 py-0.5 rounded font-bold uppercase shrink-0">CLASES</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1 pl-5.5 font-medium leading-relaxed">Acceso al campus digital y tutorías periódicas en vivo con docentes.</p>
                 </div>
               </div>
             </div>
 
             {/* Step 3: Medio de Pago */}
-            <div className="bg-slate-900/60 backdrop-blur-md p-5 rounded-2xl border border-slate-800/80 shadow-sm space-y-3">
-              <h3 className="text-sm font-black text-white flex items-center gap-2 select-none">
-                <span className="bg-[#009ee3] text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold">3</span>
+            <div className="bg-slate-900/60 backdrop-blur-md p-4 rounded-xl border border-slate-800/80 shadow-sm space-y-2.5">
+              <h3 className="text-xs font-black text-white flex items-center gap-1.5 select-none">
+                <span className="bg-[#009ee3] text-white w-4.5 h-4.5 rounded-full flex items-center justify-center text-[9px] font-bold">3</span>
                 Medio de Pago
               </h3>
 
               <div 
                 onClick={() => setPaymentMethod('whatsapp')}
-                className="p-3 rounded-xl border cursor-pointer select-none transition-all text-left bg-[#009ee3]/10 border-[#009ee3] text-white"
+                className="p-2.5 rounded-xl border cursor-pointer select-none transition-all text-left bg-[#009ee3]/10 border-[#009ee3] text-white"
               >
-                <div className="flex items-center gap-2">
-                  <span className="w-3.5 h-3.5 rounded-full border border-[#009ee3] flex items-center justify-center shrink-0">
-                    <span className="w-2 h-2 bg-[#009ee3] rounded-full" />
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full border border-[#009ee3] flex items-center justify-center shrink-0">
+                    <span className="w-1.5 h-1.5 bg-[#009ee3] rounded-full" />
                   </span>
-                  <span className="text-xs font-black uppercase tracking-wider">Acuerdo por WhatsApp</span>
-                  <span className="text-[9px] bg-[#009ee3]/20 text-[#009ee3] px-2 py-0.5 rounded font-extrabold ml-auto">PROMO VIGENTE</span>
+                  <span className="text-[11px] font-black uppercase tracking-wider">Acuerdo por WhatsApp</span>
+                  <span className="text-[8px] bg-[#009ee3]/20 text-[#009ee3] px-1.5 py-0.5 rounded font-extrabold ml-auto">PROMO VIGENTE</span>
                 </div>
-                <p className="text-[10px] text-slate-400 mt-1 pl-5.5 font-medium leading-relaxed">
-                  Reserva tu vacante hoy mismo. Un asesor te guiará para abonar tu matrícula mediante Transferencia o Mercado Pago con descuentos especiales.
-                </p>
               </div>
             </div>
 
             {/* Information notice */}
-            <div className="bg-slate-900/40 p-4 rounded-xl border border-slate-800/80 text-[11px] leading-relaxed select-none font-medium text-slate-300">
-              <p className="font-bold text-emerald-400 flex items-center gap-1.5 mb-1">
-                <span>💬</span> Confirmación Directa vía WhatsApp
+            <div className="bg-slate-900/40 p-3 rounded-xl border border-slate-800/80 text-[10px] leading-relaxed select-none font-medium text-slate-300">
+              <p className="font-bold text-emerald-400 flex items-center gap-1 mb-0.5">
+                <span>💬</span> Confirmación Directa por WhatsApp
               </p>
-              <p>Al confirmar tu pre-inscripción, enviaremos tus datos a un asesor académico para asegurar tu matrícula y vacante en los trayectos elegidos de forma inmediata.</p>
+              <p>Se enviarán tus datos a un asesor académico para asegurar tu matrícula y vacante de forma inmediata.</p>
             </div>
 
             {/* Submission Action */}
             <button
               type="submit"
               disabled={processing}
-              className={`w-full text-white py-3.5 rounded-full font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-all shadow-md ${processing ? 'bg-gray-700 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 hover:shadow-emerald-500/10'}`}
+              className={`w-full text-white py-3 rounded-full font-black text-[11px] uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-all shadow-md ${processing ? 'bg-gray-700 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 hover:shadow-emerald-500/10'}`}
               id="submit-checkout-btn"
             >
-              {processing ? 'Procesando el Registro...' : 'Confirmar Pre-Inscripción y Solicitar Cupo'}
+              {processing ? 'Procesando el Registro...' : 'Confirmar Pre-Inscripción y Reservar Cupo'}
             </button>
           </form>
 
           {/* Column 4-5: Cart Summary Sidebar */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4">
             
-            <div className="bg-slate-900/60 backdrop-blur-md p-6 rounded-[32px] border border-slate-800/80 shadow-sm space-y-4">
-              <h3 className="text-base font-black text-white select-none">Resumen de Inscripción</h3>
+            <div className="bg-slate-900/60 backdrop-blur-md p-4 rounded-xl border border-slate-800/80 shadow-sm space-y-3">
+              <h3 className="text-xs font-black text-white select-none">Resumen de Inscripción</h3>
 
               {/* Cart Items log */}
-              <div className="max-h-72 overflow-y-auto pr-2 space-y-3">
+              <div className="max-h-48 overflow-y-auto pr-1 space-y-2">
                 {cart.map((item) => (
-                  <div key={item.product.id} className="flex gap-3 text-xs p-1">
-                    <div className="w-12 h-12 bg-slate-950 border border-slate-800 rounded-xl overflow-hidden flex-shrink-0 select-none">
+                  <div key={item.product.id} className="flex gap-2.5 text-[11px] p-0.5">
+                    <div className="w-10 h-10 bg-slate-950 border border-slate-800 rounded-lg overflow-hidden flex-shrink-0 select-none">
                       <img src={getProductImage({ id: item.product.id, image: item.product.image })} alt="Cart product" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     </div>
                     <div className="flex-grow min-w-0 flex flex-col justify-center">
-                      <h4 className="font-extrabold text-white truncate">{item.product.name}</h4>
-                      <span className="text-[10px] font-medium text-slate-400 mt-0.5">{item.quantity} x ${item.product.price.toLocaleString('es-AR')}</span>
+                      <h4 className="font-extrabold text-white truncate text-[11px]">{item.product.name}</h4>
+                      <span className="text-[9px] font-medium text-slate-400 mt-0.5">{item.quantity} x ${item.product.price.toLocaleString('es-AR')}</span>
                     </div>
-                    <div className="text-right flex flex-col justify-center select-none shrink-0 font-black text-white">
+                    <div className="text-right flex flex-col justify-center select-none shrink-0 font-black text-white text-[11px]">
                       ${(item.product.price * item.quantity).toLocaleString('es-AR')}
                     </div>
                   </div>
@@ -407,32 +404,31 @@ export default function Checkout() {
               </div>
 
               {/* Costs table */}
-              <div className="pt-4 border-t border-slate-800 space-y-2.5 text-xs select-none">
+              <div className="pt-3 border-t border-slate-800 space-y-2 text-[11px] select-none">
                 <div className="flex justify-between font-semibold text-slate-400">
-                  <span>Trayectos formativos ({cartCount} u.):</span>
+                  <span>Inscripciones ({cartCount} u.):</span>
                   <span>${cartSubtotal.toLocaleString('es-AR')}</span>
                 </div>
                 <div className="flex justify-between font-semibold text-slate-500">
-                  <span>Costo de Inscripción / Despacho:</span>
-                  <span>¡Gratis! 🌟</span>
+                  <span>Costo de Inscripción:</span>
+                  <span className="text-emerald-400">¡Gratis! 🌟</span>
                 </div>
                 
-                <div className="pt-3 border-t border-dashed border-slate-800 flex justify-between items-center text-white">
-                  <span className="font-black text-sm uppercase">Total</span>
-                  <span className="text-xl font-black text-[#009ee3]">${total.toLocaleString('es-AR')}</span>
+                <div className="pt-2 border-t border-dashed border-slate-800 flex justify-between items-center text-white">
+                  <span className="font-black text-xs uppercase">Total</span>
+                  <span className="text-base font-black text-[#009ee3]">${total.toLocaleString('es-AR')}</span>
                 </div>
 
-                <div className="mt-3 select-none text-[10px] leading-relaxed text-slate-300 bg-slate-950/60 p-3 rounded-2xl border border-slate-850">
-                  <span className="text-emerald-400 font-bold block mb-1">ℹ️ Información Importante sobre Diploma</span>
-                  El valor de inscripción abonado hoy (${total.toLocaleString('es-AR')}) es un pago único de matrícula. Al finalizar tu cursada, se abonará exactamente el mismo valor para la entrega del diploma digital avalado.
+                <div className="mt-2 select-none text-[9px] leading-relaxed text-slate-400 bg-slate-950/60 p-2.5 rounded-xl border border-slate-850">
+                  <span className="text-emerald-400 font-bold block mb-0.5">ℹ️ Información sobre Diploma</span>
+                  La matrícula es un pago único. Al finalizar se abona el mismo valor para la entrega del diploma digital.
                 </div>
               </div>
             </div>
 
             {/* Refund and return trust badge policy */}
-            <div className="bg-slate-900/40 p-5 rounded-2xl border border-slate-800 text-[10px] leading-relaxed select-none font-medium text-slate-400">
-              <span className="text-lg block mb-1">🛡️</span>
-              <p>Tu inscripción está garantizada bajo el programa de protección del estudiante de Nexts.Online. Posees hasta 10 días desde el inicio para solicitar el reintegro si el programa no cumple tus expectativas profesionales.</p>
+            <div className="bg-slate-900/40 p-3.5 rounded-xl border border-slate-800/80 text-[9px] leading-relaxed select-none font-medium text-slate-400">
+              <p>🛡️ Tu inscripción está protegida. Tenés 10 días desde el inicio para solicitar el reintegro si el programa no cumple tus expectativas.</p>
             </div>
 
           </div>
