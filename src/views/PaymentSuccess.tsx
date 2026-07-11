@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { CheckCircle, Truck, Calendar, ShoppingBag, MapPin, Tag, Download } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function PaymentSuccess() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get('orderId');
   const [order, setOrder] = useState<any>(null);
@@ -107,7 +108,8 @@ export default function PaymentSuccess() {
     if (redirectCountdown === 0) {
       const url = getWhatsappUrl();
       if (url) {
-        window.location.href = url;
+        window.open(url, '_blank', 'noopener,noreferrer');
+        navigate('/', { replace: true });
       }
       return;
     }
@@ -115,7 +117,7 @@ export default function PaymentSuccess() {
       setRedirectCountdown(prev => (prev !== null ? prev - 1 : null));
     }, 1000);
     return () => clearTimeout(timer);
-  }, [redirectCountdown]);
+  }, [redirectCountdown, navigate]);
 
   if (loading) {
     return (
@@ -270,6 +272,11 @@ export default function PaymentSuccess() {
                   target="_blank"
                   referrerPolicy="no-referrer"
                   rel="noopener noreferrer"
+                  onClick={() => {
+                    setTimeout(() => {
+                      navigate('/', { replace: true });
+                    }, 1000);
+                  }}
                   className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider py-3.5 rounded-full text-center flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-500/10 hover:scale-[1.02]"
                 >
                   <span>Iniciar Chat de WhatsApp</span>
