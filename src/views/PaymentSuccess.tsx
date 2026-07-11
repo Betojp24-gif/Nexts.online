@@ -21,16 +21,62 @@ export default function PaymentSuccess() {
       }
       try {
         setLoading(true);
+
+        // Try reading from sessionStorage first
+        let localOrder: any = null;
+        try {
+          const cached = sessionStorage.getItem('last_order_payload');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed.id === orderId) {
+              localOrder = parsed;
+              setOrder(parsed);
+              setLoading(false); // Render immediately from cache!
+            }
+          }
+        } catch (cacheErr) {
+          console.warn('Failed to read from sessionStorage:', cacheErr);
+        }
+
+        // Fetch from Firestore
         const docRef = doc(db, 'orders', orderId);
+        const getPromise = getDoc(docRef);
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Firestore timeout')), 3000)
+        );
+
         let docSnap;
         try {
-          docSnap = await getDoc(docRef);
+          docSnap = await Promise.race([getPromise, timeoutPromise]);
+          if (docSnap.exists()) {
+            setOrder(docSnap.data());
+          } else if (!localOrder) {
+            // Fallback default structure so page doesn't crash or stay empty
+            setOrder({
+              customerName: 'Cursante',
+              dni: 'DNI',
+              address: 'Aula Digital (100% Online Asincrónico)',
+              items: [],
+              subtotal: 0,
+              shippingCost: 0,
+              total: 0,
+              paymentMethod: 'whatsapp'
+            });
+          }
         } catch (getErr) {
-          handleFirestoreError(getErr, OperationType.GET, `orders/${orderId}`);
-          return;
-        }
-        if (docSnap.exists()) {
-          setOrder(docSnap.data());
+          console.warn('Firestore fetch failed or timed out:', getErr);
+          if (!localOrder) {
+            setOrder({
+              customerName: 'Cursante',
+              dni: 'DNI',
+              address: 'Aula Digital (100% Online Asincrónico)',
+              items: [],
+              subtotal: 0,
+              shippingCost: 0,
+              total: 0,
+              paymentMethod: 'whatsapp'
+            });
+          }
         }
       } catch (err) {
         console.error('Error fetching order receipt from Firestore:', err);
