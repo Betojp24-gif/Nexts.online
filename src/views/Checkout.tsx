@@ -229,13 +229,16 @@ export default function Checkout() {
           <form onSubmit={handleFormSubmit} className="lg:col-span-3 space-y-6">
             
             {/* Step 1: Datos Personales */}
-            <div className="bg-slate-900/60 backdrop-blur-md p-6 md:p-8 rounded-[32px] border border-slate-800/80 shadow-sm space-y-4">
-              <h3 className="text-base font-black text-white flex items-center gap-2 select-none">
-                <span className="bg-[#009ee3] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">1</span>
-                Datos del Cursante
-              </h3>
+            <div className="bg-slate-900/60 backdrop-blur-md p-5 rounded-2xl border border-slate-800/80 shadow-sm space-y-3">
+              <div className="flex justify-between items-center select-none">
+                <h3 className="text-sm font-black text-white flex items-center gap-2">
+                  <span className="bg-[#009ee3] text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold">1</span>
+                  Datos del Cursante
+                </h3>
+                <span className="text-[10px] text-emerald-400 font-extrabold bg-emerald-400/10 px-2 py-0.5 rounded-full">⚡ SIN REGISTRO</span>
+              </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Nombre Completo *</label>
                   <input
@@ -245,7 +248,7 @@ export default function Checkout() {
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="Ej. Juan Pérez"
-                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-xl px-4 py-3 text-xs md:text-sm font-medium text-white"
+                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-xl px-3.5 py-2.5 text-xs font-medium text-white"
                     id="checkout-name-input"
                   />
                 </div>
@@ -258,13 +261,13 @@ export default function Checkout() {
                     value={formData.dni}
                     onChange={handleInputChange}
                     placeholder="Ej. 34123456"
-                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-xl px-4 py-3 text-xs md:text-sm font-medium text-white"
+                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-xl px-3.5 py-2.5 text-xs font-medium text-white"
                     id="checkout-dni-input"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">E-mail *</label>
                   <input
@@ -274,7 +277,7 @@ export default function Checkout() {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="ejemplo@correo.com"
-                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-xl px-4 py-3 text-xs md:text-sm font-medium text-white"
+                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-xl px-3.5 py-2.5 text-xs font-medium text-white"
                     id="checkout-email-input"
                   />
                 </div>
@@ -287,7 +290,7 @@ export default function Checkout() {
                     value={formData.phone}
                     onChange={handleInputChange}
                     placeholder="Ej. 1198765432"
-                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-xl px-4 py-3 text-xs md:text-sm font-medium text-white"
+                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-[#009ee3] outline-none rounded-xl px-3.5 py-2.5 text-xs font-medium text-white"
                     id="checkout-phone-input"
                   />
                 </div>
@@ -295,74 +298,84 @@ export default function Checkout() {
             </div>
 
             {/* Step 2: Forma de Cursada */}
-            <div className="bg-slate-900/60 backdrop-blur-md p-6 md:p-8 rounded-[32px] border border-slate-800/80 shadow-sm space-y-4">
-              <h3 className="text-base font-black text-white flex items-center gap-2 select-none">
-                <span className="bg-[#009ee3] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+            <div className="bg-slate-900/60 backdrop-blur-md p-5 rounded-2xl border border-slate-800/80 shadow-sm space-y-3">
+              <h3 className="text-sm font-black text-white flex items-center gap-2 select-none">
+                <span className="bg-[#009ee3] text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold">2</span>
                 Forma de Cursada
               </h3>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div 
                   onClick={() => setShippingMethod('digital')}
-                  className={`p-4 rounded-2xl border cursor-pointer select-none transition-all text-left ${shippingMethod === 'digital' ? 'bg-[#009ee3]/10 border-[#009ee3] text-white' : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 text-slate-300'}`}
+                  className={`p-3 rounded-xl border cursor-pointer select-none transition-all text-left ${shippingMethod === 'digital' ? 'bg-[#009ee3]/10 border-[#009ee3] text-white' : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 text-slate-300'}`}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-black uppercase tracking-wider">Online Asincrónico</span>
-                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2.5 py-0.5 rounded-full font-bold uppercase">Recomendado</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3.5 h-3.5 rounded-full border border-slate-600 flex items-center justify-center shrink-0">
+                        {shippingMethod === 'digital' && <span className="w-2 h-2 bg-[#009ee3] rounded-full" />}
+                      </span>
+                      <span className="text-xs font-black uppercase tracking-wider">Online Asincrónico</span>
+                    </div>
+                    <span className="text-[9px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded font-bold uppercase shrink-0">RECOMENDADO</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-relaxed font-medium">Estudia a tu propio ritmo con acceso permanente a las clases grabadas, materiales teóricos y entrega de trabajos prácticos.</p>
+                  <p className="text-[10px] text-slate-400 mt-1 pl-5.5 font-medium leading-relaxed">Estudia a tu ritmo con acceso permanente a clases grabadas y materiales.</p>
                 </div>
 
                 <div 
                   onClick={() => setShippingMethod('sincrono')}
-                  className={`p-4 rounded-2xl border cursor-pointer select-none transition-all text-left ${shippingMethod === 'sincrono' ? 'bg-[#009ee3]/10 border-[#009ee3] text-white' : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 text-slate-300'}`}
+                  className={`p-3 rounded-xl border cursor-pointer select-none transition-all text-left ${shippingMethod === 'sincrono' ? 'bg-[#009ee3]/10 border-[#009ee3] text-white' : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 text-slate-300'}`}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-black uppercase tracking-wider">Sincrónico con Apoyo</span>
-                    <span className="text-[10px] bg-sky-500/10 text-sky-400 px-2.5 py-0.5 rounded-full font-bold uppercase">Clases</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3.5 h-3.5 rounded-full border border-slate-600 flex items-center justify-center shrink-0">
+                        {shippingMethod === 'sincrono' && <span className="w-2 h-2 bg-[#009ee3] rounded-full" />}
+                      </span>
+                      <span className="text-xs font-black uppercase tracking-wider">Sincrónico con Apoyo</span>
+                    </div>
+                    <span className="text-[9px] bg-sky-500/15 text-sky-400 px-1.5 py-0.5 rounded font-bold uppercase shrink-0">CLASES</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-relaxed font-medium">Acceso completo al campus digital y encuentros periódicos de consulta/tutoría en vivo con el equipo docente.</p>
+                  <p className="text-[10px] text-slate-400 mt-1 pl-5.5 font-medium leading-relaxed">Acceso al campus digital y tutorías periódicas en vivo con docentes.</p>
                 </div>
               </div>
             </div>
 
             {/* Step 3: Medio de Pago */}
-            <div className="bg-slate-900/60 backdrop-blur-md p-6 md:p-8 rounded-[32px] border border-slate-800/80 shadow-sm space-y-4">
-              <h3 className="text-base font-black text-white flex items-center gap-2 select-none">
-                <span className="bg-[#009ee3] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+            <div className="bg-slate-900/60 backdrop-blur-md p-5 rounded-2xl border border-slate-800/80 shadow-sm space-y-3">
+              <h3 className="text-sm font-black text-white flex items-center gap-2 select-none">
+                <span className="bg-[#009ee3] text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold">3</span>
                 Medio de Pago
               </h3>
 
-              <div className="space-y-3">
-                <div 
-                  onClick={() => setPaymentMethod('whatsapp')}
-                  className={`p-4 rounded-2xl border cursor-pointer select-none transition-all text-left ${paymentMethod === 'whatsapp' ? 'bg-[#009ee3]/10 border-[#009ee3] text-white' : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 text-slate-300'}`}
-                >
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="w-4 h-4 rounded-full border border-[#009ee3] flex items-center justify-center">
-                      {paymentMethod === 'whatsapp' && <span className="w-2.5 h-2.5 bg-[#009ee3] rounded-full" />}
-                    </span>
-                    <span className="text-xs font-black uppercase tracking-wider">Acuerdo por WhatsApp (Recomendado)</span>
-                    <span className="text-[9px] bg-[#009ee3]/20 text-[#009ee3] px-2 py-0.5 rounded font-extrabold ml-auto">PROMO</span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 leading-relaxed font-medium pl-6">Reserva tu cupo hoy mismo y un asesor te guiará para abonar tu matrícula mediante Transferencia o Mercado Pago con descuentos vigentes.</p>
+              <div 
+                onClick={() => setPaymentMethod('whatsapp')}
+                className="p-3 rounded-xl border cursor-pointer select-none transition-all text-left bg-[#009ee3]/10 border-[#009ee3] text-white"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 rounded-full border border-[#009ee3] flex items-center justify-center shrink-0">
+                    <span className="w-2 h-2 bg-[#009ee3] rounded-full" />
+                  </span>
+                  <span className="text-xs font-black uppercase tracking-wider">Acuerdo por WhatsApp</span>
+                  <span className="text-[9px] bg-[#009ee3]/20 text-[#009ee3] px-2 py-0.5 rounded font-extrabold ml-auto">PROMO VIGENTE</span>
                 </div>
+                <p className="text-[10px] text-slate-400 mt-1 pl-5.5 font-medium leading-relaxed">
+                  Reserva tu vacante hoy mismo. Un asesor te guiará para abonar tu matrícula mediante Transferencia o Mercado Pago con descuentos especiales.
+                </p>
               </div>
             </div>
 
             {/* Information notice */}
-            <div className="bg-slate-900/40 p-5 rounded-2xl border border-slate-800/80 text-xs leading-relaxed select-none font-medium text-slate-300 space-y-2">
-              <p className="font-bold text-emerald-400 flex items-center gap-1.5">
-                <span>💬</span> Solicitud de Cupo directa por WhatsApp
+            <div className="bg-slate-900/40 p-4 rounded-xl border border-slate-800/80 text-[11px] leading-relaxed select-none font-medium text-slate-300">
+              <p className="font-bold text-emerald-400 flex items-center gap-1.5 mb-1">
+                <span>💬</span> Confirmación Directa vía WhatsApp
               </p>
-              <p>Al confirmar tu pre-inscripción, enviaremos tus datos académicos directamente a un asesor de Nexts.Online para verificar disponibilidad, promociones vigentes y asegurar tu matrícula en los trayectos elegidos.</p>
+              <p>Al confirmar tu pre-inscripción, enviaremos tus datos a un asesor académico para asegurar tu matrícula y vacante en los trayectos elegidos de forma inmediata.</p>
             </div>
 
             {/* Submission Action */}
             <button
               type="submit"
               disabled={processing}
-              className={`w-full text-white py-4 rounded-full font-black text-xs sm:text-sm uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-all shadow-md ${processing ? 'bg-gray-700 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 hover:shadow-emerald-500/10'}`}
+              className={`w-full text-white py-3.5 rounded-full font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-all shadow-md ${processing ? 'bg-gray-700 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 hover:shadow-emerald-500/10'}`}
               id="submit-checkout-btn"
             >
               {processing ? 'Procesando el Registro...' : 'Confirmar Pre-Inscripción y Solicitar Cupo'}
