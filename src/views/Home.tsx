@@ -36,12 +36,20 @@ export default function Home() {
       try {
         setLoading(true);
         const colRef = collection(db, 'products');
+        // Use a timeout of 3.5 seconds to prevent hanging if Firestore is slow or unreachable
+        const fetchPromise = getDocs(colRef);
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Firestore timeout')), 3500)
+        );
+
         let snap;
         try {
-          snap = await getDocs(colRef);
+          snap = await Promise.race([fetchPromise, timeoutPromise]);
         } catch (getErr) {
-          handleFirestoreError(getErr, OperationType.LIST, 'products');
-          return; // Unreachable because handleFirestoreError throws
+          console.warn('Firestore fetch failed or timed out, falling back to local products:', getErr);
+          setProducts(INITIAL_PRODUCTS);
+          setLoading(false);
+          return;
         }
         
         let shouldSeed = snap.empty;

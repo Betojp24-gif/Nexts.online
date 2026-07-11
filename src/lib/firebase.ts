@@ -60,11 +60,14 @@ if (hasEnvConfig) {
 
 const app = initializeApp(activeConfig);
 
-// Using initializeFirestore with experimentalForceLongPolling can help 
-// in environments where WebSockets are unstable or blocked.
-export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-}, activeConfig.firestoreDatabaseId);
+// Using initializeFirestore with experimentalForceLongPolling to help in development environment (proxies/sandboxes).
+// For the user's production domain (nexts.online) or other production hosts, we do NOT use long polling.
+// This allows native WebSockets to handle real-time connection instantly instead of slow HTTP polling overhead.
+const firestoreSettings = isProductionDomain 
+  ? {} 
+  : { experimentalForceLongPolling: true };
+
+export const db = initializeFirestore(app, firestoreSettings, activeConfig.firestoreDatabaseId);
 
 export const auth = getAuth(app);
 

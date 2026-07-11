@@ -33,7 +33,14 @@ export default function ProductDetails() {
         setLoading(true);
 
         const docRef = doc(db, 'products', productId);
-        const docSnap = await getDoc(docRef);
+        
+        // Wrap with a 3-second timeout fallback
+        const fetchDocPromise = getDoc(docRef);
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Firestore timeout')), 3000)
+        );
+
+        const docSnap = await Promise.race([fetchDocPromise, timeoutPromise]);
 
         if (docSnap.exists()) {
           const item = { id: docSnap.id, ...docSnap.data() } as Product;
@@ -71,7 +78,14 @@ export default function ProductDetails() {
       try {
         const colRef = collection(db, 'products');
         const qRef = query(colRef, where('category', '==', category), limit(4));
-        const snap = await getDocs(qRef);
+        
+        // Wrap with a 2-second timeout fallback
+        const fetchRelatedPromise = getDocs(qRef);
+        const timeoutRelatedPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Firestore timeout')), 2000)
+        );
+
+        const snap = await Promise.race([fetchRelatedPromise, timeoutRelatedPromise]);
         const list: Product[] = [];
         snap.forEach((docSnap) => {
           if (docSnap.id !== currentId) {
