@@ -108,8 +108,10 @@ export default function PaymentSuccess() {
     if (redirectCountdown === 0) {
       const url = getWhatsappUrl();
       if (url) {
-        window.open(url, '_blank', 'noopener,noreferrer');
-        navigate('/', { replace: true });
+        // Replace the current history entry with '/' before navigating to WhatsApp
+        // so that if the user returns or taps 'Back', they are on the home page!
+        window.history.replaceState(null, '', '/');
+        window.location.href = url;
       }
       return;
     }
@@ -117,7 +119,7 @@ export default function PaymentSuccess() {
       setRedirectCountdown(prev => (prev !== null ? prev - 1 : null));
     }, 1000);
     return () => clearTimeout(timer);
-  }, [redirectCountdown, navigate]);
+  }, [redirectCountdown]);
 
   if (loading) {
     return (
@@ -267,21 +269,21 @@ export default function PaymentSuccess() {
                 <p className="text-emerald-800 leading-relaxed font-semibold">
                   Tu pre-inscripción ha sido registrada exitosamente. Para acordar el precio y método de pago con uno de nuestros asesores, por favor haz clic en el botón de abajo para iniciar la conversación en WhatsApp con todos tus datos precargados.
                 </p>
-                <a
-                  href={getWhatsappUrl()}
-                  target="_blank"
-                  referrerPolicy="no-referrer"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
                   onClick={() => {
-                    setTimeout(() => {
-                      navigate('/', { replace: true });
-                    }, 1000);
+                    const url = getWhatsappUrl();
+                    if (url) {
+                      // Replace history with '/' and redirect to WhatsApp
+                      window.history.replaceState(null, '', '/');
+                      window.location.href = url;
+                    }
                   }}
-                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider py-3.5 rounded-full text-center flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-500/10 hover:scale-[1.02]"
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider py-3.5 rounded-full text-center flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-500/10 hover:scale-[1.02] cursor-pointer"
                 >
                   <span>Iniciar Chat de WhatsApp</span>
                   <span className="text-sm">👉</span>
-                </a>
+                </button>
               </div>
             )}
 
