@@ -8,7 +8,7 @@ export const COURSES = [
     price: 30000,
     category: 'Administración',
     icon: 'Calculator',
-    image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=50&w=500&fm=webp',
     objective: 'Capacitar para el apoyo en tareas contables y administrativas esenciales.',
     summary: 'Principios de contabilidad, gestión de facturas, conciliaciones bancarias y liquidación de impuestos básicos.',
     programUrl: '/docs/programas/asistente-contable.pdf',
@@ -88,7 +88,7 @@ export const COURSES = [
     price: 50000,
     category: 'Administración',
     icon: 'Briefcase',
-    image: 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=50&w=500&fm=webp',
     objective: 'Brindar herramientas de gestión integral para pequeñas y medianas empresas.',
     summary: 'Planeamiento estratégico, finanzas corporativas, marketing para PyMEs y gestión de procesos.',
     modules: [
@@ -116,7 +116,7 @@ export const COURSES = [
     price: 50000,
     category: 'Salud',
     icon: 'HeartPulse',
-    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=50&w=500&fm=webp',
     objective: 'Capacitar en el rol del acompañamiento terapéutico en diversos cuadros psicopatológicos.',
     summary: 'Psicología evolutiva, psicopatología, ética profesional y técnicas de intervención en crisis.',
     modules: [
@@ -144,7 +144,7 @@ export const COURSES = [
     price: 50000,
     category: 'Salud',
     icon: 'Shield',
-    image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=50&w=500&fm=webp',
     objective: 'Formar coordinadores con herramientas para el abordaje de consumos problemáticos.',
     summary: 'Modelos de prevención, comunidad terapéutica, reducción de daños y abordajes familiares.',
     modules: [
@@ -172,7 +172,7 @@ export const COURSES = [
     price: 50000,
     category: 'Social',
     icon: 'Home',
-    image: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=50&w=500&fm=webp',
     objective: 'Preparar asistentes para el trabajo en territorio y gestión de programas sociales.',
     summary: 'Políticas públicas, sociología, investigación social y herramientas de diagnóstico comunitario.',
     modules: [
@@ -200,7 +200,7 @@ export const COURSES = [
     price: 30000,
     category: 'Educación',
     icon: 'BookOpen',
-    image: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&q=50&w=500&fm=webp',
     objective: 'Introducir conceptos pedagógicos fundamentales para el apoyo escolar.',
     summary: 'Teorías del aprendizaje, didáctica general, psicología del desarrollo y nuevas tecnologías en el aula.',
     modules: [
@@ -228,7 +228,7 @@ export const COURSES = [
     price: 30000,
     category: 'Salud',
     icon: 'Stethoscope',
-    image: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&q=50&w=500&fm=webp',
     objective: 'Capacitar en la asistencia directa al odontólogo y gestión del consultorio.',
     summary: 'Anatomía dental, instrumental quirúrgico, bioseguridad y administración de historias clínicas.',
     modules: [
@@ -256,7 +256,7 @@ export const COURSES = [
     price: 50000,
     category: 'Tecnología',
     icon: 'Cpu',
-    image: 'https://images.unsplash.com/photo-1597852074816-d933c7d2b988?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1597852074816-d933c7d2b988?auto=format&fit=crop&q=50&w=500&fm=webp',
     objective: 'Brindar conocimientos técnicos sólidos para el mantenimiento y reparación de equipos.',
     summary: 'Arquitectura de computadoras, redes, sistemas operativos, mantenimiento preventivo y correctivo.',
     modules: [

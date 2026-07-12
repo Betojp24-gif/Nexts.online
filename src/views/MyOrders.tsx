@@ -89,6 +89,19 @@ function CourseTps({ courseId, courseName }: { courseId: string; courseName: str
               {tp.description}
             </p>
 
+            {tp.pdfUrl && (
+              <div className="pt-1">
+                <a 
+                  href={tp.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 hover:border-rose-200 px-4 py-2 rounded-xl font-black text-[10px] uppercase transition-all shadow-sm"
+                >
+                  <span className="text-xs">📥</span> Descargar Consigna / PDF de Estudio
+                </a>
+              </div>
+            )}
+
             <AssignmentUpload 
               courseId={courseId} 
               moduleId={tp.moduleId} 

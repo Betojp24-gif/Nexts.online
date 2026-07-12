@@ -40,6 +40,7 @@ export default function AdminDashboard() {
     courseId: '',
     title: '',
     description: '',
+    pdfUrl: '',
     moduleId: 1
   });
   const [gradingSubmissionId, setGradingSubmissionId] = useState<string | null>(null);
@@ -247,6 +248,7 @@ export default function AdminDashboard() {
         courseId: '',
         title: '',
         description: '',
+        pdfUrl: '',
         moduleId: 1
       });
       fetchTpsList();
@@ -1112,6 +1114,20 @@ export default function AdminDashboard() {
                     onChange={(e) => setNewTp({ ...newTp, description: e.target.value })}
                     className="w-full bg-slate-50 border border-gray-200 focus:border-[#009ee3] outline-none rounded-xl px-3 py-2.5 resize-none font-medium text-slate-900"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Enlace del PDF de consignas / material (Opcional)</label>
+                  <input
+                    type="url"
+                    placeholder="ej. https://ejemplo.com/trabajo-practico.pdf"
+                    value={newTp.pdfUrl || ''}
+                    onChange={(e) => setNewTp({ ...newTp, pdfUrl: e.target.value })}
+                    className="w-full bg-slate-50 border border-gray-200 focus:border-[#009ee3] outline-none rounded-xl px-3 py-2.5 font-semibold text-slate-900"
+                  />
+                  <p className="text-[9px] text-slate-400 mt-1 font-medium leading-normal">
+                    Puedes colocar el link de un PDF cargado en Google Drive, Dropbox o cualquier servidor para que tus alumnos puedan descargarlo directamente.
+                  </p>
                 </div>
 
                 <button
