@@ -21,9 +21,22 @@ export default function Home() {
 
   const [activeTestimonial, setActiveTestimonial] = useState(0);
 
-  // Products and loading states
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Products and loading states using cache for instantaneous rendering
+  const [products, setProducts] = useState<Product[]>(() => {
+    try {
+      const cached = localStorage.getItem('cached_products_list');
+      return cached ? JSON.parse(cached) : INITIAL_PRODUCTS;
+    } catch {
+      return INITIAL_PRODUCTS;
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !localStorage.getItem('cached_products_list');
+    } catch {
+      return true;
+    }
+  });
   const [seeding, setSeeding] = useState(false);
 
   // Active filter states
@@ -34,7 +47,6 @@ export default function Home() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        setLoading(true);
         const colRef = collection(db, 'products');
         // Use a timeout of 3.5 seconds to prevent hanging if Firestore is slow or unreachable
         const fetchPromise = getDocs(colRef);
@@ -46,8 +58,10 @@ export default function Home() {
         try {
           snap = await Promise.race([fetchPromise, timeoutPromise]);
         } catch (getErr) {
-          console.warn('Firestore fetch failed or timed out, falling back to local products:', getErr);
-          setProducts(INITIAL_PRODUCTS);
+          console.warn('Firestore fetch failed or timed out, falling back to cached/local products:', getErr);
+          if (products.length === 0) {
+            setProducts(INITIAL_PRODUCTS);
+          }
           setLoading(false);
           return;
         }
@@ -108,6 +122,7 @@ export default function Home() {
             }
             console.log('Seeding courses completed successfully.');
             setProducts(INITIAL_PRODUCTS);
+            localStorage.setItem('cached_products_list', JSON.stringify(INITIAL_PRODUCTS));
           } catch (writeErr) {
             console.warn('Could not seed courses to Firestore (non-admin user):', writeErr);
             // Non-admins cannot write to Firestore, so we fall back to local INITIAL_PRODUCTS directly
@@ -117,11 +132,14 @@ export default function Home() {
           }
         } else {
           setProducts(list);
+          localStorage.setItem('cached_products_list', JSON.stringify(list));
         }
       } catch (err) {
         console.error('Error loading products from Firebase:', err);
         // Fallback to static initial products in case of offline/auth issues
-        setProducts(INITIAL_PRODUCTS);
+        if (products.length === 0) {
+          setProducts(INITIAL_PRODUCTS);
+        }
       } finally {
         setLoading(false);
       }

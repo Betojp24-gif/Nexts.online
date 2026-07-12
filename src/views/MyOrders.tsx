@@ -116,9 +116,45 @@ function CourseTps({ courseId, courseName }: { courseId: string; courseName: str
 
 export default function MyOrders() {
   const { user, login } = useAuth();
-  const [orders, setOrders] = useState<any[]>([]);
-  const [productsMap, setProductsMap] = useState<Record<string, any>>({});
-  const [loading, setLoading] = useState(true);
+  
+  // Use localStorage cache for instant loading of orders and products
+  const [orders, setOrders] = useState<any[]>(() => {
+    try {
+      const cachedUser = localStorage.getItem('auth_user');
+      if (cachedUser) {
+        const uid = JSON.parse(cachedUser).uid;
+        const cached = localStorage.getItem(`orders_${uid}`);
+        return cached ? JSON.parse(cached) : [];
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+    return [];
+  });
+
+  const [productsMap, setProductsMap] = useState<Record<string, any>>(() => {
+    try {
+      const cached = localStorage.getItem('cached_products_map');
+      return cached ? JSON.parse(cached) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const [loading, setLoading] = useState(() => {
+    try {
+      // If we already have cached orders, don't show the full-screen loader spinner.
+      const cachedUser = localStorage.getItem('auth_user');
+      if (cachedUser) {
+        const uid = JSON.parse(cachedUser).uid;
+        return !localStorage.getItem(`orders_${uid}`);
+      }
+    } catch {
+      // ignore
+    }
+    return true;
+  });
+
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
   useEffect(() => {
@@ -136,6 +172,7 @@ export default function MyOrders() {
           pMap[docSnap.id] = docSnap.data();
         });
         setProductsMap(pMap);
+        localStorage.setItem('cached_products_map', JSON.stringify(pMap));
       } catch (err) {
         console.warn('Error loading products map for materials:', err);
       }
@@ -150,7 +187,7 @@ export default function MyOrders() {
         return;
       }
       try {
-        setLoading(true);
+        const cacheKey = `orders_${user.uid}`;
         const colRef = collection(db, 'orders');
         const qRef = query(
           colRef, 
@@ -176,10 +213,9 @@ export default function MyOrders() {
         });
 
         setOrders(list);
+        localStorage.setItem(cacheKey, JSON.stringify(list));
       } catch (err) {
         console.error('Error loading user orders history:', err);
-        // Fallback for user experience
-        setOrders([]);
       } finally {
         setLoading(false);
       }

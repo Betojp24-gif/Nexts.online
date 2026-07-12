@@ -26,52 +26,87 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const cached = localStorage.getItem('auth_user');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [userProfile, setUserProfile] = useState<any>(() => {
+    try {
+      const cached = localStorage.getItem('auth_user_profile');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      // If we already have a cached user, we can bypass showing the loading spinner on page reload!
+      // This makes the app feel incredibly fast ("liviana y rápida").
+      return !localStorage.getItem('auth_user');
+    } catch {
+      return true;
+    }
+  });
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('Auth state changed:', user ? 'Logged in' : 'Logged out');
-      setUser(user);
-      if (user) {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      console.log('Auth state changed:', currentUser ? 'Logged in' : 'Logged out');
+      if (currentUser) {
+        // Cache basic user fields
+        const minimalUser = {
+          uid: currentUser.uid,
+          email: currentUser.email,
+          displayName: currentUser.displayName,
+          photoURL: currentUser.photoURL
+        };
+        setUser(currentUser);
+        localStorage.setItem('auth_user', JSON.stringify(minimalUser));
+
         try {
-          const profileDoc = await getDoc(doc(db, 'users', user.uid));
+          const profileDoc = await getDoc(doc(db, 'users', currentUser.uid));
           if (profileDoc.exists()) {
             const data = profileDoc.data();
-            if (user.email === 'betojp24@gmail.com' && data.role !== 'admin') {
+            let finalProfile = data;
+            if (currentUser.email === 'betojp24@gmail.com' && data.role !== 'admin') {
               console.log('Promoting site owner to admin...');
               try {
-                await updateDoc(doc(db, 'users', user.uid), { role: 'admin' });
-                setUserProfile({ ...data, role: 'admin' });
+                await updateDoc(doc(db, 'users', currentUser.uid), { role: 'admin' });
+                finalProfile = { ...data, role: 'admin' };
               } catch (updateErr) {
                 console.error('Error promoting owner to admin:', updateErr);
-                setUserProfile(data);
               }
-            } else {
-              setUserProfile(data);
             }
+            setUserProfile(finalProfile);
+            localStorage.setItem('auth_user_profile', JSON.stringify(finalProfile));
           } else {
             console.log('No profile found, creating default (likely Google login)...');
-            const names = (user.displayName || '').split(' ');
+            const names = (currentUser.displayName || '').split(' ');
             const firstName = names[0] || 'Nuevo';
             const lastName = names.slice(1).join(' ') || 'Estudiante';
             
             const newProfile = {
               firstName,
               lastName,
-              email: user.email,
-              role: user.email === 'betojp24@gmail.com' ? 'admin' : 'student',
+              email: currentUser.email,
+              role: currentUser.email === 'betojp24@gmail.com' ? 'admin' : 'student',
               createdAt: serverTimestamp(),
             };
-            await setDoc(doc(db, 'users', user.uid), newProfile);
+            await setDoc(doc(db, 'users', currentUser.uid), newProfile);
             setUserProfile(newProfile);
+            localStorage.setItem('auth_user_profile', JSON.stringify(newProfile));
           }
         } catch (err) {
           console.error('Error fetching user profile:', err);
         }
       } else {
+        setUser(null);
         setUserProfile(null);
+        localStorage.removeItem('auth_user');
+        localStorage.removeItem('auth_user_profile');
       }
       setLoading(false);
     });
@@ -81,14 +116,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async () => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    if (result.user) {
+      const minimalUser = {
+        uid: result.user.uid,
+        email: result.user.email,
+        displayName: result.user.displayName,
+        photoURL: result.user.photoURL
+      };
+      localStorage.setItem('auth_user', JSON.stringify(minimalUser));
+    }
   };
 
   const signUpWithEmail = async (email: string, password: string, profileData: any) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+    const currentUser = userCredential.user;
     
-    await updateProfile(user, {
+    await updateProfile(currentUser, {
       displayName: `${profileData.firstName} ${profileData.lastName}`
     });
 
@@ -99,23 +143,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       createdAt: serverTimestamp(),
     };
 
-    await setDoc(doc(db, 'users', user.uid), newProfile);
+    await setDoc(doc(db, 'users', currentUser.uid), newProfile);
+    setUser(currentUser);
     setUserProfile(newProfile);
+    
+    const minimalUser = {
+      uid: currentUser.uid,
+      email: currentUser.email,
+      displayName: `${profileData.firstName} ${profileData.lastName}`,
+      photoURL: null
+    };
+    localStorage.setItem('auth_user', JSON.stringify(minimalUser));
+    localStorage.setItem('auth_user_profile', JSON.stringify(newProfile));
   };
 
   const signInWithEmail = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    if (result.user) {
+      const minimalUser = {
+        uid: result.user.uid,
+        email: result.user.email,
+        displayName: result.user.displayName,
+        photoURL: result.user.photoURL
+      };
+      localStorage.setItem('auth_user', JSON.stringify(minimalUser));
+    }
   };
 
   const logout = async () => {
     await signOut(auth);
+    setUser(null);
+    setUserProfile(null);
+    localStorage.removeItem('auth_user');
+    localStorage.removeItem('auth_user_profile');
   };
 
   const refreshProfile = async () => {
     if (user) {
       const profileDoc = await getDoc(doc(db, 'users', user.uid));
       if (profileDoc.exists()) {
-        setUserProfile(profileDoc.data());
+        const data = profileDoc.data();
+        setUserProfile(data);
+        localStorage.setItem('auth_user_profile', JSON.stringify(data));
       }
     }
   };
