@@ -11,10 +11,10 @@ import {
 import { INITIAL_PRODUCTS, getProductImage } from '../data/initialProducts';
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'orders' | 'inventory' | 'tps'>(() => {
+  const [activeTab, setActiveTab] = useState<'orders' | 'inventory' | 'tps' | 'students'>(() => {
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
-    return (tabParam && ['orders', 'inventory', 'tps'].includes(tabParam) ? tabParam as any : 'orders');
+    return (tabParam && ['orders', 'inventory', 'tps', 'students'].includes(tabParam) ? tabParam as any : 'orders');
   });
   
   // Data lists
@@ -22,6 +22,14 @@ export default function AdminDashboard() {
   const [products, setProducts] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
+
+  // Students management state
+  const [students, setStudents] = useState<any[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [selectedCourseForStudent, setSelectedCourseForStudent] = useState<string>('');
+  const [assigningCourse, setAssigningCourse] = useState(false);
+  const [studentSearchTerm, setStudentSearchTerm] = useState('');
 
   // TPs & submissions states
   const [tps, setTps] = useState<any[]>([]);
@@ -82,13 +90,14 @@ export default function AdminDashboard() {
     fetchPaymentConfig();
     fetchTpsList();
     fetchSubmissionsList();
+    fetchStudentsList();
   }, []);
 
   // Sync tab state from query parameter
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
-    if (tabParam && ['orders', 'inventory', 'tps'].includes(tabParam)) {
+    if (tabParam && ['orders', 'inventory', 'tps', 'students'].includes(tabParam)) {
       setActiveTab(tabParam as any);
     }
   }, [window.location.search]);
@@ -120,6 +129,96 @@ export default function AdminDashboard() {
       console.warn('Error loading submissions:', err);
     } finally {
       setLoadingSubmissions(false);
+    }
+  };
+
+  const fetchStudentsList = async () => {
+    try {
+      setLoadingStudents(true);
+      const snap = await getDocs(collection(db, 'users'));
+      const list: any[] = [];
+      snap.forEach(d => {
+        list.push({ uid: d.id, ...d.data() });
+      });
+      list.sort((a, b) => {
+        const nameA = `${a.firstName || ''} ${a.lastName || ''}`.trim().toLowerCase();
+        const nameB = `${b.firstName || ''} ${b.lastName || ''}`.trim().toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+      setStudents(list);
+    } catch (err) {
+      console.warn('Error loading students:', err);
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+
+  const handleAssignCourseToStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStudent || !selectedCourseForStudent) {
+      toast.error('Por favor selecciona un estudiante y un curso.');
+      return;
+    }
+    const selectedCourse = products.find(p => p.id === selectedCourseForStudent);
+    if (!selectedCourse) {
+      toast.error('Curso no encontrado.');
+      return;
+    }
+
+    try {
+      setAssigningCourse(true);
+      const orderRef = doc(collection(db, 'orders'));
+      const payload = {
+        userId: selectedStudent.uid,
+        customerName: `${selectedStudent.firstName || ''} ${selectedStudent.lastName || ''}`.trim() || 'Estudiante',
+        customerEmail: selectedStudent.email || '',
+        customerPhone: selectedStudent.phone || '',
+        dni: selectedStudent.dni || '',
+        address: 'Aula Virtual - Habilitado por Admin',
+        city: '',
+        province: '',
+        items: [
+          {
+            productId: selectedCourse.id,
+            name: selectedCourse.name,
+            price: selectedCourse.price || 0,
+            quantity: 1,
+            image: selectedCourse.image || ''
+          }
+        ],
+        subtotal: selectedCourse.price || 0,
+        shippingCost: 0,
+        total: selectedCourse.price || 0,
+        paymentMethod: 'whatsapp',
+        status: 'processing', // Activated immediately
+        createdAt: serverTimestamp(),
+        paymentDetails: {
+          referenceCode: 'HABILITADO_POR_ADMIN',
+          transferReceiptChecked: true
+        }
+      };
+
+      await setDoc(orderRef, payload);
+      toast.success(`¡Curso "${selectedCourse.name}" habilitado con éxito para ${selectedStudent.firstName || 'el estudiante'}!`);
+      setSelectedCourseForStudent('');
+      fetchOrdersList();
+    } catch (err) {
+      console.error('Error assigning course to student:', err);
+      toast.error('No se pudo habilitar el curso.');
+    } finally {
+      setAssigningCourse(false);
+    }
+  };
+
+  const handleRevokeCourseAccess = async (orderId: string, courseName: string) => {
+    if (!confirm(`¿Estás seguro de quitar el acceso al curso "${courseName}" para este alumno?`)) return;
+    try {
+      await deleteDoc(doc(db, 'orders', orderId));
+      toast.success('Acceso al curso revocado (Inscripción eliminada).');
+      fetchOrdersList();
+    } catch (err) {
+      console.error(err);
+      toast.error('No se pudo remover el acceso.');
     }
   };
 
@@ -407,6 +506,17 @@ export default function AdminDashboard() {
               className={`px-4 py-2.5 rounded-xl transition-all ${activeTab === 'tps' ? 'bg-[#009ee3] text-white' : 'text-slate-500 hover:text-slate-900'}`}
             >
               Cargar / Gestionar TPs
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('students');
+                const url = new URL(window.location.href);
+                url.searchParams.set('tab', 'students');
+                window.history.pushState({}, '', url);
+              }}
+              className={`px-4 py-2.5 rounded-xl transition-all ${activeTab === 'students' ? 'bg-[#009ee3] text-white' : 'text-slate-500 hover:text-slate-900'}`}
+            >
+              Estudiantes y Cursadas
             </button>
           </div>
         </header>
@@ -1179,6 +1289,217 @@ export default function AdminDashboard() {
               </div>
             </div>
 
+          </div>
+        )}
+
+        {/* TAB 5: ESTUDIANTES Y CURSADAS */}
+        {activeTab === 'students' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            {/* Column 1: Students list */}
+            <div className="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="font-black text-slate-900 text-base">Alumnos Registrados</h3>
+                <button
+                  onClick={fetchStudentsList}
+                  className="p-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors"
+                  title="Recargar estudiantes"
+                >
+                  <RefreshCw size={12} className={loadingStudents ? 'animate-spin' : ''} />
+                </button>
+              </div>
+
+              {/* Search bar */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre, email o DNI..."
+                  value={studentSearchTerm}
+                  onChange={(e) => setStudentSearchTerm(e.target.value)}
+                  className="w-full bg-slate-50 border border-gray-200 focus:border-[#009ee3] outline-none rounded-xl px-3 py-2 text-xs text-slate-900 font-semibold"
+                />
+              </div>
+
+              {loadingStudents ? (
+                <div className="p-8 text-center text-slate-400 font-bold text-xs animate-pulse">Cargando alumnos...</div>
+              ) : students.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 font-medium text-xs">No hay estudiantes registrados.</div>
+              ) : (
+                <div className="space-y-2 max-h-[450px] overflow-y-auto pr-1">
+                  {students
+                    .filter(s => {
+                      const fullName = `${s.firstName || ''} ${s.lastName || ''}`.toLowerCase();
+                      const email = (s.email || '').toLowerCase();
+                      const dni = (s.dni || '').toLowerCase();
+                      const term = studentSearchTerm.toLowerCase();
+                      return fullName.includes(term) || email.includes(term) || dni.includes(term);
+                    })
+                    .map(student => {
+                      const isSelected = selectedStudent?.uid === student.uid;
+                      return (
+                        <div
+                          key={student.uid}
+                          onClick={() => setSelectedStudent(student)}
+                          className={`p-3 rounded-xl border transition-all cursor-pointer text-left ${
+                            isSelected 
+                              ? 'bg-sky-50 border-[#009ee3] shadow-sm' 
+                              : 'bg-slate-50 hover:bg-slate-100/70 border-gray-100'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start gap-1">
+                            <p className="font-extrabold text-slate-950 text-xs sm:text-sm">
+                              {student.firstName || ''} {student.lastName || ''}
+                            </p>
+                            {student.role === 'admin' && (
+                              <span className="bg-rose-100 text-rose-700 text-[8px] font-black uppercase px-1.5 py-0.5 rounded">
+                                Admin
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-slate-500 font-medium truncate mt-0.5">{student.email}</p>
+                          {student.dni && (
+                            <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">DNI: {student.dni}</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+
+            {/* Column 2-3: Selected Student Details & Enrollment Controls */}
+            <div className="lg:col-span-2 space-y-6">
+              {selectedStudent ? (
+                <div className="space-y-6">
+                  {/* Student Details Card */}
+                  <div className="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm space-y-4">
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b border-gray-50 pb-4 gap-3">
+                      <div>
+                        <span className="text-[9px] bg-sky-50 text-[#009ee3] px-2.5 py-1 rounded-full font-black uppercase tracking-wider">
+                          Ficha del Alumno
+                        </span>
+                        <h3 className="font-black text-slate-900 text-lg mt-2">
+                          {selectedStudent.firstName} {selectedStudent.lastName}
+                        </h3>
+                        <p className="text-xs text-slate-500 font-semibold mt-0.5">{selectedStudent.email}</p>
+                      </div>
+
+                      {/* Enable course quick form */}
+                      <form onSubmit={handleAssignCourseToStudent} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <select
+                          required
+                          value={selectedCourseForStudent}
+                          onChange={(e) => setSelectedCourseForStudent(e.target.value)}
+                          className="bg-slate-50 border border-gray-200 focus:border-[#009ee3] outline-none rounded-xl px-3 py-2 text-xs font-bold text-slate-900"
+                        >
+                          <option value="">-- Seleccionar curso --</option>
+                          {products.map(p => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </select>
+                        <button
+                          type="submit"
+                          disabled={assigningCourse}
+                          className="bg-[#009ee3] hover:bg-[#008bd0] disabled:bg-slate-200 text-white font-black text-xs uppercase px-4 py-2 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1 shrink-0"
+                        >
+                          {assigningCourse ? 'Habilitando...' : 'Habilitar Cursada'}
+                        </button>
+                      </form>
+                    </div>
+
+                    {/* Active courses / matriculas list */}
+                    <div className="space-y-3">
+                      <h4 className="font-black text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <span>🎓</span> Cursos Habilitados y Aulas Virtuales
+                      </h4>
+
+                      {orders.filter(o => o.userId === selectedStudent.uid).length === 0 ? (
+                        <div className="p-8 text-center bg-slate-50/50 rounded-2xl border border-dashed border-gray-200">
+                          <p className="text-xs text-slate-400 font-semibold">Este alumno no tiene ninguna cursada habilitada actualmente.</p>
+                          <p className="text-[10px] text-slate-400 font-medium mt-1">Usa el menú de arriba para habilitarle un curso de forma inmediata.</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {orders
+                            .filter(o => o.userId === selectedStudent.uid)
+                            .map((order) => {
+                              return (
+                                <div key={order.id} className="p-4 bg-slate-50 rounded-2xl border border-gray-150 space-y-3 flex flex-col justify-between">
+                                  <div>
+                                    <div className="flex justify-between items-start gap-1">
+                                      <span className="text-[8px] font-mono font-bold text-slate-400">ID: {order.id}</span>
+                                      <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                                        order.status === 'processing' || order.status === 'completed' || order.status === 'delivered'
+                                          ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                          : 'bg-amber-50 text-amber-700 border-amber-100'
+                                      }`}>
+                                        {order.status === 'processing' ? 'Activo/Cursando' : order.status === 'completed' ? 'Completado' : order.status}
+                                      </span>
+                                    </div>
+
+                                    <div className="mt-1 space-y-1">
+                                      {order.items?.map((it: any, k: number) => (
+                                        <p key={k} className="font-extrabold text-slate-900 text-xs text-left leading-snug">
+                                          {it.name}
+                                        </p>
+                                      ))}
+                                    </div>
+
+                                    <div className="text-[10px] text-slate-400 font-medium mt-2 space-y-0.5">
+                                      <p>Método: <span className="font-bold text-slate-600 uppercase">{order.paymentMethod}</span></p>
+                                      {order.createdAt?.seconds && (
+                                        <p>Fecha: {new Date(order.createdAt.seconds * 1000).toLocaleDateString()}</p>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="pt-2 border-t border-dashed border-gray-200 flex items-center justify-between gap-2">
+                                    <select
+                                      value={order.status || 'pending'}
+                                      onChange={async (e) => {
+                                        try {
+                                          await updateDoc(doc(db, 'orders', order.id), { status: e.target.value });
+                                          fetchOrdersList();
+                                          toast.success('Estado de aula virtual actualizado.');
+                                        } catch (err) {
+                                          console.error(err);
+                                          toast.error('No se pudo cambiar el estado.');
+                                        }
+                                      }}
+                                      className="bg-white text-[9px] font-black uppercase text-slate-800 border border-gray-200 rounded p-1 outline-none focus:border-[#009ee3]"
+                                    >
+                                      <option value="pending">Pendiente de Pago</option>
+                                      <option value="processing">Activo / Cursando</option>
+                                      <option value="delivered">Completado / Certificado</option>
+                                      <option value="cancelled">Inactivo / Cancelado</option>
+                                    </select>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRevokeCourseAccess(order.id, order.items?.[0]?.name || 'Curso')}
+                                      className="text-rose-500 hover:text-rose-700 font-black uppercase text-[9px] px-1"
+                                      title="Dar de baja cursada"
+                                    >
+                                      Dar de Baja
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white p-12 rounded-[28px] border border-gray-100 shadow-sm text-center">
+                  <span className="text-4xl">👥</span>
+                  <h4 className="font-black text-slate-900 text-sm mt-4 uppercase tracking-wider">Gestor de Cursadas de Alumnos</h4>
+                  <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto mt-2 leading-relaxed">
+                    Selecciona un estudiante de la columna de la izquierda para ver su ficha, habilitarle nuevos cursos o dar de baja accesos activos de inmediato.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
