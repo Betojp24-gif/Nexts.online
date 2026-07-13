@@ -23,9 +23,10 @@ service cloud.firestore {
     // Users Collection
     match /users/{userId} {
       allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
-      allow create: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow update: if isSignedIn() && (isOwner(userId) || isAdmin()) && 
                     (!incoming().keys().hasAny(['role']) || isAdmin() || incoming().role == existing().role);
+      allow delete: if isAdmin();
     }
 
     // Products Collection (Zona Kids toys/books)

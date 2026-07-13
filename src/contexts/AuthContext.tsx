@@ -9,7 +9,7 @@ import {
   signInWithEmailAndPassword,
   updateProfile
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, updateDoc, collection, query, where, getDocs, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
 interface AuthContextType {
@@ -158,15 +158,90 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithEmail = async (email: string, password: string) => {
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    if (result.user) {
-      const minimalUser = {
-        uid: result.user.uid,
-        email: result.user.email,
-        displayName: result.user.displayName,
-        photoURL: result.user.photoURL
-      };
-      localStorage.setItem('auth_user', JSON.stringify(minimalUser));
+    try {
+      const result = await signInWithEmailAndPassword(auth, email.trim(), password.trim());
+      if (result.user) {
+        const minimalUser = {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName,
+          photoURL: result.user.photoURL
+        };
+        localStorage.setItem('auth_user', JSON.stringify(minimalUser));
+      }
+    } catch (err: any) {
+      console.log('Standard login failed, checking manual student registry...', err?.code);
+      if (err?.code === 'auth/user-not-found' || err?.code === 'auth/invalid-credential') {
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('email', '==', email.trim().toLowerCase()));
+        const snap = await getDocs(q);
+        
+        let foundUser: any = null;
+        snap.forEach(d => {
+          const uData = d.data();
+          const storedDni = (uData.dni || '').trim();
+          if (storedDni && storedDni.toLowerCase() === password.trim().toLowerCase()) {
+            foundUser = { uid: d.id, ...uData };
+          }
+        });
+
+        if (foundUser) {
+          console.log('Found manual student! Creating Firebase Auth account with DNI as password...');
+          const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password.trim());
+          const currentUser = userCredential.user;
+          
+          await updateProfile(currentUser, {
+            displayName: `${foundUser.firstName || ''} ${foundUser.lastName || ''}`.trim()
+          });
+
+          // Move profile to authenticated uid
+          const oldDocRef = doc(db, 'users', foundUser.uid);
+          const newDocRef = doc(db, 'users', currentUser.uid);
+          
+          const updatedProfile = {
+            ...foundUser,
+            uid: currentUser.uid,
+            createdAt: foundUser.createdAt || serverTimestamp()
+          };
+          delete updatedProfile.isGuest; // remove guest flag if it was synthesized
+
+          await setDoc(newDocRef, updatedProfile);
+          
+          if (foundUser.uid !== currentUser.uid) {
+            try {
+              await deleteDoc(oldDocRef);
+            } catch (delErr) {
+              console.warn('Could not delete temporary student doc:', delErr);
+            }
+          }
+
+          // Link existing orders to the new authenticated uid
+          try {
+            const ordersRef = collection(db, 'orders');
+            const ordersQ = query(ordersRef, where('userId', '==', foundUser.uid));
+            const ordersSnap = await getDocs(ordersQ);
+            for (const d of ordersSnap.docs) {
+              await updateDoc(doc(db, 'orders', d.id), { userId: currentUser.uid });
+            }
+          } catch (orderErr) {
+            console.warn('Could not re-link orders to new uid:', orderErr);
+          }
+
+          setUser(currentUser);
+          setUserProfile(updatedProfile);
+          
+          const minimalUser = {
+            uid: currentUser.uid,
+            email: currentUser.email,
+            displayName: `${foundUser.firstName || ''} ${foundUser.lastName || ''}`.trim(),
+            photoURL: null
+          };
+          localStorage.setItem('auth_user', JSON.stringify(minimalUser));
+          localStorage.setItem('auth_user_profile', JSON.stringify(updatedProfile));
+          return;
+        }
+      }
+      throw err;
     }
   };
 

@@ -150,8 +150,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <h2 className="text-2xl font-black text-white tracking-tight mb-1">
                 {isLogin ? 'Ingresar a Nexts.Online' : 'Crear nueva cuenta'}
               </h2>
-              <p className="text-slate-400 text-[11px] font-semibold leading-relaxed">
-                {isLogin ? 'El futuro de tu educación te espera' : 'Únete a la red educativa más grande del país'}
+              <p className="text-slate-400 text-[11px] font-semibold leading-relaxed px-4">
+                {isLogin 
+                  ? 'Acceso instantáneo sin salir de la página. Si el administrador te registró, tu contraseña inicial es tu DNI.' 
+                  : 'Únete a la red educativa más grande del país'}
               </p>
             </div>
 

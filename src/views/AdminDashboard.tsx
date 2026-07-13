@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, serverTimestamp, query, where } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { 
   Users, ShoppingBag, Settings, CheckCircle, Clock, 
@@ -30,6 +30,15 @@ export default function AdminDashboard() {
   const [selectedCourseForStudent, setSelectedCourseForStudent] = useState<string>('');
   const [assigningCourse, setAssigningCourse] = useState(false);
   const [studentSearchTerm, setStudentSearchTerm] = useState('');
+  const [showAddStudentForm, setShowAddStudentForm] = useState(false);
+  const [newStudentData, setNewStudentData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    dni: '',
+    phone: ''
+  });
+  const [creatingStudent, setCreatingStudent] = useState(false);
 
   // TPs & submissions states
   const [tps, setTps] = useState<any[]>([]);
@@ -141,6 +150,35 @@ export default function AdminDashboard() {
       snap.forEach(d => {
         list.push({ uid: d.id, ...d.data() });
       });
+
+      // Scan orders to find guest buyers who do not have a user profile doc yet
+      try {
+        const ordersSnap = await getDocs(collection(db, 'orders'));
+        const userEmailsInUsers = new Set(list.map(u => (u.email || '').toLowerCase().trim()));
+        
+        ordersSnap.forEach(d => {
+          const orderData = d.data();
+          const email = (orderData.customerEmail || '').toLowerCase().trim();
+          if (email && !userEmailsInUsers.has(email)) {
+            const [firstName, ...lastNameParts] = (orderData.customerName || 'Estudiante').split(' ');
+            const lastName = lastNameParts.join(' ');
+            list.push({
+              uid: orderData.userId || `guest_${d.id}`,
+              firstName: firstName || 'Estudiante',
+              lastName: lastName || 'Invitado',
+              email: email,
+              phone: orderData.customerPhone || '',
+              dni: orderData.dni || '',
+              role: 'student',
+              isGuest: true // Flag to indicate guest buyer
+            });
+            userEmailsInUsers.add(email);
+          }
+        });
+      } catch (err) {
+        console.warn('Could not scan orders for guest students:', err);
+      }
+
       list.sort((a, b) => {
         const nameA = `${a.firstName || ''} ${a.lastName || ''}`.trim().toLowerCase();
         const nameB = `${b.firstName || ''} ${b.lastName || ''}`.trim().toLowerCase();
@@ -149,6 +187,127 @@ export default function AdminDashboard() {
       setStudents(list);
     } catch (err) {
       console.warn('Error loading students:', err);
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+
+  const handleCreateStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { firstName, lastName, email, dni, phone } = newStudentData;
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !dni.trim()) {
+      toast.error('Por favor completa Nombre, Apellido, Email y DNI.');
+      return;
+    }
+    
+    try {
+      setCreatingStudent(true);
+      
+      const existing = students.find(s => (s.email || '').toLowerCase().trim() === email.trim().toLowerCase());
+      if (existing && !existing.isGuest) {
+        toast.error('Ya existe un alumno registrado con ese correo electrónico.');
+        return;
+      }
+
+      // Generate a temporary uid
+      const newUid = 'temp_' + dni.trim().replace(/\s/g, '') + '_' + Math.random().toString(36).substr(2, 9);
+      const studentDocRef = doc(db, 'users', newUid);
+      
+      const payload = {
+        uid: newUid,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim().toLowerCase(),
+        dni: dni.trim(),
+        phone: phone.trim(),
+        role: 'student',
+        createdAt: serverTimestamp(),
+        isManual: true
+      };
+
+      await setDoc(studentDocRef, payload);
+      toast.success(`Alumno "${firstName} ${lastName}" registrado con éxito. Su contraseña inicial es su DNI.`);
+      
+      setNewStudentData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        dni: '',
+        phone: ''
+      });
+      setShowAddStudentForm(false);
+      
+      await fetchStudentsList();
+      setSelectedStudent(payload);
+    } catch (err) {
+      console.error('Error creating student:', err);
+      toast.error('No se pudo registrar al alumno.');
+    } finally {
+      setCreatingStudent(false);
+    }
+  };
+
+  const handleDeleteStudent = async (studentUid: string, studentName: string) => {
+    if (!confirm(`¿Estás totalmente seguro de eliminar al alumno "${studentName}" y todas sus cursadas? Esta acción es irreversible.`)) return;
+    try {
+      setLoadingStudents(true);
+      if (!studentUid.startsWith('guest_')) {
+        await deleteDoc(doc(db, 'users', studentUid));
+      }
+      
+      const ordersQ = query(collection(db, 'orders'), where('userId', '==', studentUid));
+      const ordersSnap = await getDocs(ordersQ);
+      for (const d of ordersSnap.docs) {
+        await deleteDoc(doc(db, 'orders', d.id));
+      }
+      
+      toast.success(`Alumno "${studentName}" y accesos eliminados correctamente.`);
+      setSelectedStudent(null);
+      fetchStudentsList();
+      fetchOrdersList();
+    } catch (err) {
+      console.error('Error deleting student:', err);
+      toast.error('No se pudo eliminar al alumno.');
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+
+  const handleConvertGuestToStudent = async (guest: any) => {
+    try {
+      setLoadingStudents(true);
+      const newUid = guest.uid.startsWith('guest_') ? 'temp_' + guest.dni + '_' + Math.random().toString(36).substr(2, 9) : guest.uid;
+      const docRef = doc(db, 'users', newUid);
+      
+      const payload = {
+        uid: newUid,
+        firstName: guest.firstName,
+        lastName: guest.lastName,
+        email: guest.email,
+        dni: guest.dni || '',
+        phone: guest.phone || '',
+        role: 'student',
+        createdAt: serverTimestamp(),
+        isManual: true
+      };
+      
+      await setDoc(docRef, payload);
+      
+      // Update any orders that had the old guest uid to the new temporary uid
+      if (guest.uid !== newUid) {
+        const ordersQ = query(collection(db, 'orders'), where('userId', '==', guest.uid));
+        const ordersSnap = await getDocs(ordersQ);
+        for (const d of ordersSnap.docs) {
+          await updateDoc(doc(db, 'orders', d.id), { userId: newUid });
+        }
+      }
+      
+      toast.success(`¡Comprador Invitado convertido en Alumno Registrado con éxito! Su contraseña inicial es su DNI.`);
+      await fetchStudentsList();
+      setSelectedStudent(payload);
+    } catch (err) {
+      console.error('Error converting guest to student:', err);
+      toast.error('No se pudo convertir al alumno.');
     } finally {
       setLoadingStudents(false);
     }
@@ -1313,16 +1472,94 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             {/* Column 1: Students list */}
             <div className="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm space-y-4">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center flex-wrap gap-2">
                 <h3 className="font-black text-slate-900 text-base">Alumnos Registrados</h3>
-                <button
-                  onClick={fetchStudentsList}
-                  className="p-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors"
-                  title="Recargar estudiantes"
-                >
-                  <RefreshCw size={12} className={loadingStudents ? 'animate-spin' : ''} />
-                </button>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => setShowAddStudentForm(!showAddStudentForm)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-[#009ee3] rounded-xl text-[10px] font-black uppercase transition-all"
+                    title="Registrar nuevo alumno manualmente"
+                  >
+                    <Plus size={12} /> {showAddStudentForm ? 'Cerrar' : 'Crear'}
+                  </button>
+                  <button
+                    onClick={fetchStudentsList}
+                    className="p-1.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors"
+                    title="Recargar estudiantes"
+                  >
+                    <RefreshCw size={12} className={loadingStudents ? 'animate-spin' : ''} />
+                  </button>
+                </div>
               </div>
+
+              {/* Add manual student form */}
+              {showAddStudentForm && (
+                <form onSubmit={handleCreateStudent} className="p-4 bg-slate-50 border border-gray-150 rounded-2xl space-y-2.5">
+                  <div className="text-left">
+                    <h4 className="font-black text-slate-900 text-xs uppercase">Nuevo Alumno</h4>
+                    <p className="text-[9px] text-slate-400 font-bold leading-normal">
+                      Se creará un perfil inicial. Su contraseña por defecto será su DNI.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      required
+                      type="text"
+                      placeholder="Nombre"
+                      value={newStudentData.firstName}
+                      onChange={(e) => setNewStudentData({ ...newStudentData, firstName: e.target.value })}
+                      className="w-full bg-white border border-gray-200 outline-none rounded-lg p-2 text-xs font-semibold text-slate-900 placeholder-slate-400"
+                    />
+                    <input
+                      required
+                      type="text"
+                      placeholder="Apellido"
+                      value={newStudentData.lastName}
+                      onChange={(e) => setNewStudentData({ ...newStudentData, lastName: e.target.value })}
+                      className="w-full bg-white border border-gray-200 outline-none rounded-lg p-2 text-xs font-semibold text-slate-900 placeholder-slate-400"
+                    />
+                  </div>
+                  <input
+                    required
+                    type="email"
+                    placeholder="Email"
+                    value={newStudentData.email}
+                    onChange={(e) => setNewStudentData({ ...newStudentData, email: e.target.value })}
+                    className="w-full bg-white border border-gray-200 outline-none rounded-lg p-2 text-xs font-semibold text-slate-900 placeholder-slate-400"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      required
+                      type="text"
+                      placeholder="DNI (Contraseña)"
+                      value={newStudentData.dni}
+                      onChange={(e) => setNewStudentData({ ...newStudentData, dni: e.target.value })}
+                      className="w-full bg-white border border-gray-200 outline-none rounded-lg p-2 text-xs font-semibold text-slate-900 placeholder-slate-400"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Teléfono"
+                      value={newStudentData.phone}
+                      onChange={(e) => setNewStudentData({ ...newStudentData, phone: e.target.value })}
+                      className="w-full bg-white border border-gray-200 outline-none rounded-lg p-2 text-xs font-semibold text-slate-900 placeholder-slate-400"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={creatingStudent}
+                    className="w-full h-9 bg-[#009ee3] hover:bg-[#008bd0] disabled:bg-slate-200 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5"
+                  >
+                    {creatingStudent ? (
+                      <RefreshCw className="animate-spin" size={13} />
+                    ) : (
+                      <>
+                        <Check size={13} />
+                        <span>Registrar Alumno</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
 
               {/* Search bar */}
               <div className="relative">
@@ -1365,11 +1602,19 @@ export default function AdminDashboard() {
                             <p className="font-extrabold text-slate-950 text-xs sm:text-sm">
                               {student.firstName || ''} {student.lastName || ''}
                             </p>
-                            {student.role === 'admin' && (
+                            {student.role === 'admin' ? (
                               <span className="bg-rose-100 text-rose-700 text-[8px] font-black uppercase px-1.5 py-0.5 rounded">
                                 Admin
                               </span>
-                            )}
+                            ) : student.isGuest ? (
+                              <span className="bg-amber-100 text-amber-700 text-[8px] font-black uppercase px-1.5 py-0.5 rounded">
+                                Invitado
+                              </span>
+                            ) : student.isManual ? (
+                              <span className="bg-indigo-100 text-indigo-700 text-[8px] font-black uppercase px-1.5 py-0.5 rounded">
+                                Manual
+                              </span>
+                            ) : null}
                           </div>
                           <p className="text-[10px] text-slate-500 font-medium truncate mt-0.5">{student.email}</p>
                           {student.dni && (
@@ -1504,6 +1749,42 @@ export default function AdminDashboard() {
                         </div>
                       )}
                     </div>
+
+                    {/* Guest Conversion & Deletion Zones */}
+                    <div className="pt-4 border-t border-gray-100 space-y-4">
+                      {selectedStudent.isGuest && (
+                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3">
+                          <div className="text-left">
+                            <p className="text-xs font-black text-amber-800 uppercase">Comprador Invitado (Sin Cuenta)</p>
+                            <p className="text-[10px] text-amber-700 font-semibold leading-normal">
+                              Este alumno compró sin registrarse. Conviértelo en Alumno Registrado para que pueda ingresar con su DNI como contraseña sin popups de Google.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleConvertGuestToStudent(selectedStudent)}
+                            className="bg-amber-600 hover:bg-amber-700 text-white font-black text-[10px] uppercase px-3 py-1.5 rounded-xl shrink-0 transition-all shadow-sm"
+                          >
+                            Convertir a Alumno
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center gap-4 flex-wrap">
+                        <div className="text-left">
+                          <p className="text-[10px] text-slate-400 font-black uppercase">Ficha y Accesos</p>
+                          <p className="text-[9px] text-slate-400 font-semibold">Elimina permanentemente la ficha de este alumno de la plataforma y todas sus cursadas activas.</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteStudent(selectedStudent.uid, `${selectedStudent.firstName} ${selectedStudent.lastName}`)}
+                          className="bg-rose-50 hover:bg-rose-100 text-rose-600 px-3.5 py-1.5 rounded-xl font-black uppercase text-[10px] tracking-wider transition-all flex items-center gap-1 shrink-0"
+                        >
+                          <Trash2 size={12} /> Eliminar Alumno
+                        </button>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               ) : (
