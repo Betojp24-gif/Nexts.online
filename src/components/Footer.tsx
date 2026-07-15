@@ -44,9 +44,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           
           <div className="col-span-1 md:col-span-2 space-y-4">
-            <div className="flex items-center gap-2 text-2xl font-black tracking-tight select-none">
-              <BookOpen size={24} className="text-[#009ee3]" />
-              <div className="flex text-2xl font-black tracking-tight font-sans">
+            <div className="flex items-center gap-2 text-xl font-black tracking-tight select-none">
+              <img 
+                src="/logo.jpg" 
+                alt="Nexts.Online Logo" 
+                className="w-8 h-8 rounded-lg object-cover border border-slate-800"
+                referrerPolicy="no-referrer"
+              />
+              <div className="flex text-xl font-black tracking-tight font-sans">
                 <span className="text-white">Nexts</span>
                 <span className="text-[#009ee3]">.Online</span>
               </div>

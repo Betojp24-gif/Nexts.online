@@ -54,8 +54,14 @@ export default function Navbar() {
               </button>
               <span 
                 onClick={handleLogoClick}
-                className="flex items-center gap-1.5 cursor-pointer select-none"
+                className="flex items-center gap-2.5 cursor-pointer select-none"
               >
+                <img 
+                  src="/logo.jpg" 
+                  alt="Nexts.Online Logo" 
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border border-slate-800/80 shadow-md"
+                  referrerPolicy="no-referrer"
+                />
                 <div className="flex text-[17px] min-[360px]:text-xl sm:text-2xl font-black tracking-tight font-sans text-white">
                   <span>Nexts</span>
                   <span className="text-[#009ee3]">.Online</span>
@@ -83,28 +89,6 @@ export default function Navbar() {
             {/* Actions & Buttons */}
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
               
-              {/* Active Admin Dashboard Link if admin */}
-              {userProfile?.role === 'admin' && (
-                <Link
-                  to="/admin"
-                  className="p-1.5 sm:p-2 text-slate-300 hover:text-[#009ee3] hover:bg-slate-900 rounded-full transition-colors relative"
-                  title="Panel de Administración"
-                >
-                  <LayoutDashboard size={18} className="sm:w-5 sm:h-5" />
-                </Link>
-              )}
- 
-              {/* My Orders / Mis Pedidos if logged in */}
-              {user && (
-                <Link
-                  to="/my-orders"
-                  className="p-1.5 sm:p-2 text-slate-300 hover:text-[#009ee3] hover:bg-slate-900 rounded-full transition-colors"
-                  title="Mis Inscripciones"
-                >
-                  <Package size={18} className="sm:w-5 sm:h-5" />
-                </Link>
-              )}
- 
               {/* Shopping Cart button with counter badge */}
               <button
                 onClick={() => setIsCartOpen(true)}

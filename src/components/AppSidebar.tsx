@@ -16,7 +16,8 @@ import {
   ExternalLink,
   LogIn,
   FileCheck,
-  BookOpen
+  BookOpen,
+  Download
 } from 'lucide-react';
 
 export default function AppSidebar() {
@@ -26,8 +27,11 @@ export default function AppSidebar() {
 
   const menuItems = [
     { title: 'Inicio / Cursos', path: '/', icon: Home },
+    ...(userProfile?.role === 'admin' ? [
+      { title: 'Panel del Instituto', path: '/admin', icon: LayoutDashboard }
+    ] : []),
     ...(user ? [
-      { title: 'Tus Cursos / Inscripciones', path: '/my-orders', icon: BookOpen },
+      { title: 'Mis Inscripciones / Cursos', path: '/my-orders', icon: BookOpen },
       { title: 'Mi Perfil', path: '/profile', icon: User }
     ] : [
       { title: 'Iniciar Sesión / Registrarse', action: 'login', icon: LogIn }
@@ -69,7 +73,13 @@ export default function AppSidebar() {
               className="fixed top-0 left-0 h-full w-[280px] bg-slate-950/95 backdrop-blur-md border-r border-slate-850 z-[70] shadow-2xl flex flex-col pointer-events-auto text-left"
             >
               <div className="p-6 border-b border-slate-850 flex items-center justify-between bg-slate-900/40">
-                <div className="flex text-lg font-black tracking-tight font-sans">
+                <div className="flex items-center gap-2 text-base font-black tracking-tight font-sans">
+                  <img 
+                    src="/logo.jpg" 
+                    alt="Nexts.Online Logo" 
+                    className="w-7 h-7 rounded-lg object-cover border border-slate-800"
+                    referrerPolicy="no-referrer"
+                  />
                   <span className="text-white">Nexts</span>
                   <span className="text-[#009ee3]">.Online</span>
                 </div>
