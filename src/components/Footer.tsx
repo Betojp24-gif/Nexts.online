@@ -73,7 +73,7 @@ export default function Footer() {
                 <Mail size={14} className="text-[#009ee3]" /> nexts.online@gmail.com
               </li>
               <li className="flex items-center gap-2">
-                <Phone size={14} className="text-[#009ee3]" /> +54 9 11 6613-4186
+                <Phone size={14} className="text-[#009ee3]" /> +54 9 11 5868-6668
               </li>
               <li className="flex items-center gap-2">
                 <MapPin size={14} className="text-[#009ee3]" /> Av. de Mayo 800, CABA, Argentina

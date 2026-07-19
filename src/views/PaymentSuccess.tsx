@@ -94,7 +94,7 @@ export default function PaymentSuccess() {
     const itemsText = order.items?.map((it: any) => `${it.quantity}x ${it.name}`).join(', ') || 'Cursos';
     const totalText = order.total?.toLocaleString('es-AR') || '0';
     const message = `Hola! Registré mi pre-inscripción con el código #${orderId || 'NX-NUEVA'}. Mi nombre es ${order.customerName || ''}, DNI ${order.dni || ''}, email ${order.customerEmail || ''}. Deseo coordinar el pago de los siguientes trayectos: ${itemsText}. Total estimado: $${totalText}.`;
-    return `https://wa.me/5491166134186?text=${encodeURIComponent(message)}`;
+    return `https://wa.me/5491158686668?text=${encodeURIComponent(message)}`;
   };
 
   useEffect(() => {

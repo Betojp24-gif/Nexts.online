@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 
 export default function WhatsAppButton() {
-  const phoneNumber = "5491166134186"; // Replace with real number or env var
+  const phoneNumber = "5491158686668"; // Replace with real number or env var
   const message = encodeURIComponent("Hola Nexts.Online! Tengo una consulta sobre los cursos, carreras o acerca de los métodos de pago.");
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
 

@@ -425,7 +425,7 @@ export default function MyOrders() {
                                     </p>
                                     <div className="pt-1">
                                       <a
-                                        href={`https://wa.me/5491166134186?text=${encodeURIComponent(`Hola! Registré mi pre-inscripción con el código #${order.id} para el trayecto de ${item.name}. Mi DNI es ${order.dni}. Quisiera coordinar el pago/acceso.`)}`}
+                                        href={`https://wa.me/5491158686668?text=${encodeURIComponent(`Hola! Registré mi pre-inscripción con el código #${order.id} para el trayecto de ${item.name}. Mi DNI es ${order.dni}. Quisiera coordinar el pago/acceso.`)}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black px-3.5 py-2 rounded-lg uppercase tracking-wider transition-all shadow-sm"
